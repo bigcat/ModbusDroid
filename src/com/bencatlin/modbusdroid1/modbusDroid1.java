@@ -44,7 +44,7 @@ public class modbusDroid1 extends Activity {
         	
     	private ModbusTCPMaster modbusMaster = null;
  
-       	@Override 
+       	//@Override 
        	public void run(){
 			try {
        		modbusMaster.connect();
