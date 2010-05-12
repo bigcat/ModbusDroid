@@ -5,18 +5,23 @@ import java.net.InetAddress;
 import net.wimpi.modbus.facade.ModbusTCPMaster;
 import android.app.Activity;
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class modbusDroid1 extends Activity {
     /** Called when the activity is first created. */
 	TextView RandomText = null;
-	private static final int MENU1 = Menu.FIRST;
-	private static final int MENU2 = Menu.FIRST + 1;
+	private static final int CONN_SETTINGS = Menu.FIRST + 2;
+	private static final int CONNECT = Menu.FIRST;
+	private static final int DISCONNECT = Menu.FIRST + 1;
+	private static final int QUIT_MENU = Menu.FIRST + 3;
+	
 	
 	private String hostIPaddress;
 	private int hostPort;
@@ -43,18 +48,26 @@ public class modbusDroid1 extends Activity {
 
     /* Creates the menu items */
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU1, 0, "Connection");
-        menu.add(0, MENU2, 0, "Quit");
+        menu.add(0, CONNECT, 0, "Connect");
+        menu.add(0, DISCONNECT, 0, "Disconnect");
+        menu.add(0, CONN_SETTINGS, 0, "Connection Settings");
+        menu.add(0, QUIT_MENU, 0, "Quit");
         return true;
     }
 
     /* Handles item selections */
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case MENU1:
-            RandomText.setText("take to connection menu");
-            return true;
-        case MENU2:
+        case CONN_SETTINGS:
+        	startActivity(new Intent(this, connectionSettings.class));
+            return(true);
+        case CONNECT:
+        	Toast.makeText(this, "This should connect to something", 10).show();
+        	return true;
+        case DISCONNECT:
+        	Toast.makeText(this, "This should disconnect from something", 10).show();
+        	return true;
+        case QUIT_MENU:
             finish();
             return true;
         }
@@ -68,7 +81,7 @@ public class modbusDroid1 extends Activity {
      */
     
     private class modbusPollingThread implements Runnable {
-        	
+        
     	private ModbusTCPMaster modbusMaster = null;
  
        	//@Override 
@@ -76,16 +89,12 @@ public class modbusDroid1 extends Activity {
 			try {
        		modbusMaster.connect();
 			}
-			catch (Exception e) {
-			
+			catch (Exception e) {	
 			}
        	}
-    	
     	public modbusPollingThread (ModbusTCPMaster modMaster) {
     		this.modbusMaster = modMaster;
     	}
-
-
     }
     
     class registerListView extends ListActivity {

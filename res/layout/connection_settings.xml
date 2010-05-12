@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <TextView
+        android:id="@+id/IP_label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Enter Server Address:"/>
+
+    <EditText
+        android:id="@+id/IP_address_entry"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background"
+        android:layout_below="@id/IP_label"
+        android:text="10.0.2.2"/>
+
+    <TextView
+        android:id="@+id/Port_label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/IP_address_entry"
+        android:text="Enter Port:"/>
+
+    <EditText
+        android:id="@+id/Port_entry"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background"
+        android:layout_below="@id/Port_label"
+        android:text="502"/>
+    <Button
+        android:id="@+id/Connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/Port_entry"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="10dip"
+        android:text="Save+Connect" />
+	<Button
+        android:id="@+id/Save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/Connect"
+        android:layout_alignTop="@id/Connect"
+        android:layout_marginLeft="10dip"
+        android:text="Save" />
+
+    <Button
+        android:id="@+id/Cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/Save"
+        android:layout_alignTop="@id/Save"
+        android:text="Cancel" />
+</RelativeLayout>

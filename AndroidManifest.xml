@@ -12,7 +12,9 @@
             </intent-filter>
         </activity>
 
-    </application>
+    <activity android:name="connectionSettings" android:label="@string/Conn_Settings">
+    </activity>
+</application>
     <uses-sdk android:minSdkVersion="4"/>
     
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>

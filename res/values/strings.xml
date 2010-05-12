@@ -3,4 +3,6 @@
     <string name="hello">Hello World, modbusDroid1!</string>
     <string name="app_name">Modbus Droid 1</string>
     <string name="point_type_prompt">Select a Modbus Point Type</string>
+<string name="Conn_Settings">Connection Settings</string>
+<string name="modbus_prefs">ModbusDroidSharedPrefs</string>
 </resources>
