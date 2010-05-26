@@ -1,4 +1,4 @@
-package com.bencatlin.modbusdroid1;
+package com.bencatlin.modbusdroid;
 
 import java.net.InetAddress;
 
@@ -14,10 +14,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class modbusDroid1 extends Activity {
+public class ModbusDroid extends Activity {
     /** Called when the activity is first created. */
 	TextView RandomText = null;
-	private static final int CONN_SETTINGS = Menu.FIRST + 2;
+	private static final int SETTINGS = Menu.FIRST + 2;
 	private static final int CONNECT = Menu.FIRST;
 	private static final int DISCONNECT = Menu.FIRST + 1;
 	private static final int QUIT_MENU = Menu.FIRST + 3;
@@ -50,15 +50,15 @@ public class modbusDroid1 extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, CONNECT, 0, "Connect");
         menu.add(0, DISCONNECT, 0, "Disconnect");
-        menu.add(0, CONN_SETTINGS, 0, "Connection Settings");
-        menu.add(0, QUIT_MENU, 0, "Quit");
+        menu.add(0, SETTINGS, 0, "Settings").setIcon(android.R.drawable.ic_menu_preferences);
+        menu.add(0, QUIT_MENU, 0, "Quit").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
         return true;
     }
 
     /* Handles item selections */
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case CONN_SETTINGS:
+        case SETTINGS:
         	startActivity(new Intent(this, connectionSettings.class));
             return(true);
         case CONNECT:

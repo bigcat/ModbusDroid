@@ -1,22 +1,25 @@
-package com.bencatlin.modbusdroid1;
+package com.bencatlin.modbusdroid;
 
 import android.R.string;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class connectionSettings extends Activity {
+public class connectionSettings extends PreferenceActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.connection_settings);
-	
-        final EditText IP_address_entry = (EditText) findViewById(R.id.IP_address_entry);
+        //setContentView(R.layout.connection_settings);
+        addPreferencesFromResource(R.xml.preferences);
+        
+        
+        /*final EditText IP_address_entry = (EditText) findViewById(R.id.IP_address_entry);
         final Button Cancel = (Button) findViewById(R.id.Cancel);
         final Button Save = (Button) findViewById(R.id.Save);
         final Button SaveConnect = (Button) findViewById(R.id.SaveConnect);
@@ -62,6 +65,6 @@ public class connectionSettings extends Activity {
             public void onClick(View v) {
             	finish();
             }
-        });
+        }); */
     }
 }

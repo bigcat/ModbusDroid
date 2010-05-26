@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="Connection Settings">
+		<EditTextPreference  android:dialogTitle="Set IP Address"
+        	android:dialogMessage="IP Address:"
+            android:key="IpAddress"
+            android:title="IP Address"
+            android:summary="Set Destination IP Address"
+            android:defaultValue="10.0.2.2" />
+        <EditTextPreference  android:dialogTitle="Set Destination Port"
+        	android:dialogMessage="Port:"
+            android:key="PortSetting"
+            android:title="Port"
+            android:summary="Set Destination Port"
+            android:defaultValue="502" />
+	</PreferenceCategory>
+	<PreferenceCategory android:title="Modbus Settings">
+		<EditTextPreference  android:dialogTitle="Set Poll Time in ms (0 = Poll Once)"
+        	android:dialogMessage="Poll Time:"
+            android:key="PollTime"
+            android:title="Poll Time"
+            android:summary="Set Poll Time (ms)"
+            android:defaultValue="500" />
+	</PreferenceCategory>
+</PreferenceScreen>
