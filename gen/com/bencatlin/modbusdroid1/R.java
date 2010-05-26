@@ -17,20 +17,23 @@ public final class R {
         public static final int icon=0x7f020000;
     }
     public static final class id {
-        public static final int Cancel=0x7f060006;
-        public static final int Connect=0x7f060004;
+        public static final int Cancel=0x7f060009;
         public static final int IP_address_entry=0x7f060001;
         public static final int IP_label=0x7f060000;
-        public static final int Port_entry=0x7f060003;
-        public static final int Port_label=0x7f060002;
-        public static final int Save=0x7f060005;
-        public static final int length=0x7f06000c;
-        public static final int length_Label=0x7f060009;
-        public static final int param_table=0x7f060007;
-        public static final int point_Type=0x7f06000d;
-        public static final int point_Type_Label=0x7f06000a;
-        public static final int start_Address=0x7f06000b;
-        public static final int start_Address_Label=0x7f060008;
+        public static final int Poll_entry=0x7f060006;
+        public static final int Poll_label=0x7f060004;
+        public static final int Port_entry=0x7f060005;
+        public static final int Port_label=0x7f060003;
+        public static final int Save=0x7f060008;
+        public static final int SaveConnect=0x7f060007;
+        public static final int length=0x7f06000f;
+        public static final int length_Label=0x7f06000c;
+        public static final int param_table=0x7f06000a;
+        public static final int point_Type=0x7f060010;
+        public static final int point_Type_Label=0x7f06000d;
+        public static final int prefsTable=0x7f060002;
+        public static final int start_Address=0x7f06000e;
+        public static final int start_Address_Label=0x7f06000b;
     }
     public static final class layout {
         public static final int connection_settings=0x7f030000;
