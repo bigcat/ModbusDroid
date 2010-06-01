@@ -102,7 +102,44 @@ public class ModbusTCPMaster {
     this(addr);
     m_Connection.setPort(port);
   }//constructor
-
+  
+  /**
+   * returns connection status
+   * 
+   */
+  public boolean isConnected () {
+	  return m_Connection.isConnected();
+  }
+  
+  /**
+   * Sets socket/modbus network timeout
+   * Ben Catlin 5/31/2010
+   */
+  public void setConnectionTimeout (int timeout) {
+	  m_Connection.setTimeout(timeout);
+  }
+  
+  /**
+   * Sets the IP address in case we want to change connection
+   * Added 5/29/2010 Ben Catlin
+   * 
+   * @param addr an internet address as resolvable IP name or IP number,
+   *             specifying the slave to communicate with.
+   */
+  public void setIPAddress (String addr) 
+  	throws RuntimeException {
+	  try {
+		  m_SlaveAddress = InetAddress.getByName(addr);	
+		  m_Connection.setAddress(m_SlaveAddress);
+	  } catch (UnknownHostException e) {
+      throw new RuntimeException(e.getMessage());
+	  }
+  }
+  
+  public String getIPAddress() {
+	  return m_SlaveAddress.toString();
+  }
+  
   /**
    * Connects this <tt>ModbusTCPMaster</tt> with the slave.
    *
@@ -126,6 +163,7 @@ public class ModbusTCPMaster {
       m_Transaction = null;
     }
   }//disconnect
+
 
   /**
    * Sets the flag that specifies whether to maintain a

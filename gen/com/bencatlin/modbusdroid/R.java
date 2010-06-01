@@ -28,12 +28,12 @@ public final class R {
         public static final int SaveConnect=0x7f070007;
         public static final int length=0x7f07000f;
         public static final int length_Label=0x7f07000c;
+        public static final int offset=0x7f07000e;
+        public static final int offset_Label=0x7f07000b;
         public static final int param_table=0x7f07000a;
         public static final int point_Type=0x7f070010;
         public static final int point_Type_Label=0x7f07000d;
         public static final int prefsTable=0x7f070002;
-        public static final int start_Address=0x7f07000e;
-        public static final int start_Address_Label=0x7f07000b;
     }
     public static final class layout {
         public static final int connection_settings=0x7f030000;

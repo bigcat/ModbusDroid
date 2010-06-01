@@ -6,26 +6,48 @@ import net.wimpi.modbus.facade.ModbusTCPMaster;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnKeyListener;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class ModbusDroid extends Activity {
-    /** Called when the activity is first created. */
-	TextView RandomText = null;
+    
+	/** Called when the activity is first created. */
 	private static final int SETTINGS = Menu.FIRST + 2;
 	private static final int CONNECT = Menu.FIRST;
 	private static final int DISCONNECT = Menu.FIRST + 1;
 	private static final int QUIT_MENU = Menu.FIRST + 3;
 	
+	private static final String IP_ADDRESS_PREFERENCE = "IpAddress";
+	private static final String PORT_PREFERENCE = "PortSetting";
+	private static final String POLL_TIME_PREFERENCE = "PollTime";
 	
 	private String hostIPaddress;
 	private int hostPort;
-	private ModbusTCPMaster modbusMaster = null;
+	private int pollTime;
+	private PollModbus mb = null;
+	
+	private SharedPreferences settings;
+	Thread mbThread = null;
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		
+		if (settings == null) {
+			settings = PreferenceManager.getDefaultSharedPreferences(this);
+		}
+	}
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,19 +55,52 @@ public class ModbusDroid extends Activity {
         setContentView(R.layout.main);
         
         
+        final EditText offset_editText = (EditText) findViewById(R.id.offset);
+        final EditText registerLength = (EditText) findViewById(R.id.length);
+        
+        settings = PreferenceManager.getDefaultSharedPreferences(this);
+        
         //Handler for spinner to select modbus data type
-        {
         Spinner s = (Spinner) findViewById(R.id.point_Type);
         //build array with modbus point types
         ArrayAdapter adapter = ArrayAdapter.createFromResource(
                 this, R.array.pointTypes, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s.setAdapter(adapter);
-        }
-            
+        
+        //get the preferences currently stored in the SharedPreferences
+        getSharedSettings();
+        
+        mb = new PollModbus(hostIPaddress, hostPort, pollTime);
+        
+        //register keypress handler to change register offset
+        offset_editText.setOnKeyListener(new OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                	//mb.setReference( Integer.parseInt(offset_editText.getText().toString() ) );
+                	return true;
+                }
+                else {
+                	return false;
+                }
+            }
+        });
+        
+        //register keypress handler to change length to read
+        registerLength.setOnKeyListener(new OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                	//mb.setCount( Integer.parseInt(registerLength.getText().toString() ) );
+                	return true;
+                }
+                else {
+                	return false;
+                }
+            }
+        });
+
     }
     
-
     /* Creates the menu items */
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, CONNECT, 0, "Connect");
@@ -57,15 +112,61 @@ public class ModbusDroid extends Activity {
 
     /* Handles item selections */
     public boolean onOptionsItemSelected(MenuItem item) {
+    	
+    	String oldHostIPaddress = hostIPaddress;
+    	int oldPollTime = pollTime;
+    	int oldHostPort = hostPort;
+    	
         switch (item.getItemId()) {
         case SETTINGS:
         	startActivity(new Intent(this, connectionSettings.class));
+
+        	getSharedSettings();	
+        	
+        	if (hostIPaddress != oldHostIPaddress) {
+        		if (mb.isConnected()){
+        			mb.disconnect();
+        		}
+        		mb.setIPAddress(hostIPaddress);
+        	}       	
             return(true);
+            
         case CONNECT:
         	Toast.makeText(this, "This should connect to something", 10).show();
+        	if (mb == null) {
+        		mb = new PollModbus(hostIPaddress, hostPort, pollTime);	
+        	}
+        	else if (mb.isConnected()) {
+        		mb.disconnect();	
+        	}
+        	
+        	if (mbThread == null) {
+        		mbThread = new Thread(mb, "PollingThread");        			
+    		}
+        	else if (mbThread.isAlive()) {
+        		mbThread.interrupt();
+        		mbThread = null;
+        		mbThread = new Thread(mb, "PollingThread");
+        	}
+        	else {
+        		mbThread = null;
+        		mbThread = new Thread(mb, "PollingThread");
+        	}
+        	//mb.connect();
+        	mbThread.start();
+        	
         	return true;
+        	
         case DISCONNECT:
-        	Toast.makeText(this, "This should disconnect from something", 10).show();
+        	if (!mb.isConnected()){
+        		Toast.makeText(this, "Not Connected to Anything!", 10).show();
+        	}
+        	else {
+        		//mbThread.interrupt();
+        		mb.disconnect();
+        		Toast.makeText(this, "Disconnected from " + hostIPaddress, 10).show();
+        	}
+        
         	return true;
         case QUIT_MENU:
             finish();
@@ -73,36 +174,15 @@ public class ModbusDroid extends Activity {
         }
         return false;
     }
-
     
-    /* modbusPollingThread is a separate background thread that 
-     * continuously polls modbus values on the host in the background
-     * 
+    /**
+     * Gets settings from the Shared Preferences, and sets local variables
      */
     
-    private class modbusPollingThread implements Runnable {
-        
-    	private ModbusTCPMaster modbusMaster = null;
- 
-       	//@Override 
-       	public void run(){
-			try {
-       		modbusMaster.connect();
-			}
-			catch (Exception e) {	
-			}
-       	}
-    	public modbusPollingThread (ModbusTCPMaster modMaster) {
-    		this.modbusMaster = modMaster;
-    	}
+    private void getSharedSettings () {
+    	hostIPaddress = settings.getString(IP_ADDRESS_PREFERENCE, "10.0.2.2");
+        hostPort = Integer.parseInt(settings.getString(PORT_PREFERENCE, "502"));
+        pollTime = Integer.parseInt(settings.getString(POLL_TIME_PREFERENCE, "500"));
     }
     
-    class registerListView extends ListActivity {
-
-    	private String[] modbusDisplayValues;
-    	
-    	registerListView (String[] modbusDisplayValues){
-    		this.modbusDisplayValues = modbusDisplayValues;
-    	}
-    }
 }
