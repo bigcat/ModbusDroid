@@ -1,10 +1,7 @@
 package com.bencatlin.modbusdroid;
 
 import java.net.InetAddress;
-
-import net.wimpi.modbus.facade.ModbusTCPMaster;
 import android.app.Activity;
-import android.app.ListActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,11 +11,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 public class ModbusDroid extends Activity {
     
@@ -35,6 +33,9 @@ public class ModbusDroid extends Activity {
 	private String hostIPaddress;
 	private int hostPort;
 	private int pollTime;
+	private int offset;
+	private int m_count;
+	private int regType;
 	private PollModbus mb = null;
 	
 	private SharedPreferences settings;
@@ -61,7 +62,8 @@ public class ModbusDroid extends Activity {
         settings = PreferenceManager.getDefaultSharedPreferences(this);
         
         //Handler for spinner to select modbus data type
-        Spinner s = (Spinner) findViewById(R.id.point_Type);
+        final Spinner s = (Spinner) findViewById(R.id.point_Type);
+        
         //build array with modbus point types
         ArrayAdapter adapter = ArrayAdapter.createFromResource(
                 this, R.array.pointTypes, android.R.layout.simple_spinner_item);
@@ -71,13 +73,32 @@ public class ModbusDroid extends Activity {
         //get the preferences currently stored in the SharedPreferences
         getSharedSettings();
         
-        mb = new PollModbus(hostIPaddress, hostPort, pollTime);
+        offset = Integer.parseInt(offset_editText.getText().toString());
+        m_count = Integer.parseInt(registerLength.getText().toString());
+        regType = s.getSelectedItemPosition() + 1;
         
+        
+        mb = new PollModbus(hostIPaddress, hostPort, pollTime, offset,	m_count, regType);  
+        
+       
+        s.setOnItemSelectedListener( new OnItemSelectedListener() {
+        		public void onItemSelected ( AdapterView<?> parent, View view, int pos, long id) {
+    					regType = s.getSelectedItemPosition() + 1;        				
+        				mb.setRegType(regType);
+
+        		    }
+
+        		    public void onNothingSelected(AdapterView parent) {
+        		      // Do nothing.
+        		    }
+        });
+      
         //register keypress handler to change register offset
         offset_editText.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                	//mb.setReference( Integer.parseInt(offset_editText.getText().toString() ) );
+                	offset = Integer.parseInt(offset_editText.getText().toString());
+                	mb.setReference(offset);
                 	return true;
                 }
                 else {
@@ -90,15 +111,17 @@ public class ModbusDroid extends Activity {
         registerLength.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                	//mb.setCount( Integer.parseInt(registerLength.getText().toString() ) );
+                	
+                	m_count = Integer.parseInt(registerLength.getText().toString());
+                	mb.setCount(m_count);
                 	return true;
+                
                 }
                 else {
                 	return false;
                 }
             }
-        });
-
+        });  
     }
     
     /* Creates the menu items */
@@ -134,7 +157,8 @@ public class ModbusDroid extends Activity {
         case CONNECT:
         	Toast.makeText(this, "This should connect to something", 10).show();
         	if (mb == null) {
-        		mb = new PollModbus(hostIPaddress, hostPort, pollTime);	
+        		mb = new PollModbus(hostIPaddress, hostPort, pollTime, 
+                		offset,	m_count, regType);	
         	}
         	else if (mb.isConnected()) {
         		mb.disconnect();	

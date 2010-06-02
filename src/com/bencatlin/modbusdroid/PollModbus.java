@@ -28,19 +28,15 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 *  port = default is 502
 	 *  poll time = 500ms
 	 */
-	public PollModbus (String adr) {
-		this(adr, 502, 500);
-	}
-	
-	public PollModbus (String adr, int port) {
-		this(adr, port, 500);
-	}
-	
-	public PollModbus (String adr, int port, int polltime) {
+
+	public PollModbus (String adr, int port, int polltime, int ref, int count, int regType) {
 		super(adr, port);
-		this.m_polltime = polltime;
+		this.setReference(ref);
+		this.setCount(count);
+		this.setPollTime(polltime);
+		this.setRegType(regType);
 	}
-	
+		
 	/**
 	 * Gets current polltime
 	 * @return polltime
@@ -53,16 +49,20 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 * Sets Modbus Polling time
 	 * @param polltime
 	 */
-	public void setPollTime (int polltime) {
+	public synchronized void setPollTime (int polltime) {
 		this.m_polltime = polltime;
 	}
 	
-	public void setReference (int ref) {
+	public synchronized void setReference (int ref) {
 		this.m_reference = ref;
 	}
 	
-	public void setCount (int count) {
+	public synchronized void setCount (int count) {
 		this.m_count = count;
+	}
+	
+	public synchronized void setRegType (int regType) {
+		this.m_registerType = regType;
 	}
 	
 	/*public void setIPaddress (String IPaddress) {
@@ -72,7 +72,7 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	/**
 	 * Connects to server and starts polling thread
 	 */
-	public void connect() throws RuntimeException {
+	public void connect() throws Exception {
 		try {
 			super.connect();
 			m_connected = true;
@@ -109,42 +109,57 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 * 
 	 */
 	public void run() {
+		String temp = null;
 		try {
 		this.connect();
 		}
-		catch (RuntimeException e)
+		catch (RuntimeException runtime_e)
 		{
+			String errormsg = runtime_e.getMessage();
 			//Need a way to get a debug message here
+		}
+		catch (Exception connect_e)
+		{	
+			String errormsg = connect_e.getMessage();
+			//Need a way to get a debug message here too
 		}
 		
 		try {
 			while (m_connected) {
 				switch (m_registerType) {
 				case INPUT_DESCRETES:
-					String temp;
+					
 					temp =  this.readInputDiscretes(m_reference, m_count).toString();
 					m_responseData = String2StringArray(temp);
 					break;
 				case HOLDING_COIL:	
-					
+					//this.readCoils(m_reference, m_count).toString();
 					break;
 				case INPUT_REGISTER:
-					this.readInputRegisters(m_reference, m_count).toString();
+					//this.readInputRegisters(m_reference, m_count).toString();
 					break;
 				case HOLDING_REGISTER:
-				
+					//this.readMultipleRegisters(m_reference, m_count).toString();
+					break;
+				//For some lame-ass reason this has to be synchronized to work right
 				}
-				wait(m_polltime);
+				synchronized (this){ 
+					this.wait(m_polltime);
+				}
 			}			
 		}
 		catch (ModbusException m_exception) {
 			String error = m_exception.getMessage();
 		}
-		catch (Exception e) {
-			if (m_connected) {
-				this.disconnect();
-			}
-			//TODO add something here to handle exception
+		/*catch (IOException IOe) {
+			
+		}*/
+		catch (Exception poll_e) {
+			String error = poll_e.getMessage();
+			//if (m_connected) {
+				//this.disconnect();
+			//}
+			// TODO add something here to handle exception
 		}
 	}
 	
