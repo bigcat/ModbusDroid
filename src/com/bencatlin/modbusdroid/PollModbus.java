@@ -109,9 +109,10 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 * 
 	 */
 	public void run() {
-		String temp = null;
+		Object temp_obj = null;
+		String temp_string = null;
 		try {
-		this.connect();
+			this.connect();
 		}
 		catch (RuntimeException runtime_e)
 		{
@@ -129,8 +130,9 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 				switch (m_registerType) {
 				case INPUT_DESCRETES:
 					
-					temp =  this.readInputDiscretes(m_reference, m_count).toString();
-					m_responseData = String2StringArray(temp);
+					temp_obj =  this.readInputDiscretes(m_reference, m_count);
+					temp_string = temp_obj.toString(); 
+					m_responseData = String2StringArray(temp_string);
 					break;
 				case HOLDING_COIL:	
 					//this.readCoils(m_reference, m_count).toString();
@@ -163,12 +165,17 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 		}
 	}
 	
-	private String[] String2StringArray (String str) {
+	private String[] String2StringArray (String str) throws Exception {
 		int strIndex = 0;
 		char temp;
 		String[] stringArray = new String[str.length()];
-		for (int i = str.length(); i >= 0; i--) {
-			temp = str.charAt(i);
+		for (int i = str.length()-1; i >= 0; i--) {
+			try {
+				temp = str.charAt(i);
+			}
+			catch (IndexOutOfBoundsException bounds_exception) {
+				throw new Exception("Size exceeds byte[] store.");
+			}
 			stringArray[strIndex] = Character.toString(temp);
 			strIndex++;
 		}

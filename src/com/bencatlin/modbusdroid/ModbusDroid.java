@@ -79,15 +79,12 @@ public class ModbusDroid extends Activity {
         
         
         mb = new PollModbus(hostIPaddress, hostPort, pollTime, offset,	m_count, regType);  
-        
        
         s.setOnItemSelectedListener( new OnItemSelectedListener() {
         		public void onItemSelected ( AdapterView<?> parent, View view, int pos, long id) {
     					regType = s.getSelectedItemPosition() + 1;        				
         				mb.setRegType(regType);
-
         		    }
-
         		    public void onNothingSelected(AdapterView parent) {
         		      // Do nothing.
         		    }
