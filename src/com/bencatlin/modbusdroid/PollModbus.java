@@ -3,6 +3,7 @@ package com.bencatlin.modbusdroid;
 import android.widget.Toast;
 import net.wimpi.modbus.ModbusException;
 import net.wimpi.modbus.facade.ModbusTCPMaster;
+import net.wimpi.modbus.util.BitVector;
 
 public class PollModbus extends ModbusTCPMaster implements Runnable {
 	
@@ -130,7 +131,7 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 				switch (m_registerType) {
 				case INPUT_DESCRETES:
 					
-					temp_obj =  this.readInputDiscretes(m_reference, m_count);
+					temp_obj = this.readInputDiscretes(m_reference, m_count);
 					temp_string = temp_obj.toString(); 
 					m_responseData = String2StringArray(temp_string);
 					break;

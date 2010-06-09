@@ -28,6 +28,9 @@ public final class R {
         public static final int SaveConnect=0x7f070007;
         public static final int length=0x7f07000f;
         public static final int length_Label=0x7f07000c;
+        public static final int mod_Address=0x7f070012;
+        public static final int mod_Value=0x7f070013;
+        public static final int modbus_table=0x7f070011;
         public static final int offset=0x7f07000e;
         public static final int offset_Label=0x7f07000b;
         public static final int param_table=0x7f07000a;
@@ -38,6 +41,7 @@ public final class R {
     public static final class layout {
         public static final int connection_settings=0x7f030000;
         public static final int main=0x7f030001;
+        public static final int modbus_value_row=0x7f030002;
     }
     public static final class string {
         public static final int Conn_Settings=0x7f060003;
