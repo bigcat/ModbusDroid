@@ -34,7 +34,7 @@
         		android:layout_width="100dp"
         		android:layout_height="wrap_content"
         		android:layout_column="2"
-        		android:text="Poll Time (s):"/>
+        		android:text="Poll Time (ms):"/>
 
         </TableRow>
         <TableRow android:layout_width="fill_parent">

@@ -26,16 +26,17 @@ public final class R {
         public static final int Port_label=0x7f070003;
         public static final int Save=0x7f070008;
         public static final int SaveConnect=0x7f070007;
-        public static final int length=0x7f07000f;
-        public static final int length_Label=0x7f07000c;
-        public static final int mod_Address=0x7f070012;
-        public static final int mod_Value=0x7f070013;
-        public static final int modbus_table=0x7f070011;
-        public static final int offset=0x7f07000e;
-        public static final int offset_Label=0x7f07000b;
-        public static final int param_table=0x7f07000a;
-        public static final int point_Type=0x7f070010;
-        public static final int point_Type_Label=0x7f07000d;
+        public static final int length=0x7f070010;
+        public static final int length_Label=0x7f07000d;
+        public static final int main_layout=0x7f07000a;
+        public static final int mod_Address=0x7f070013;
+        public static final int mod_Value=0x7f070014;
+        public static final int modbus_table=0x7f070012;
+        public static final int offset=0x7f07000f;
+        public static final int offset_Label=0x7f07000c;
+        public static final int param_table=0x7f07000b;
+        public static final int point_Type=0x7f070011;
+        public static final int point_Type_Label=0x7f07000e;
         public static final int prefsTable=0x7f070002;
     }
     public static final class layout {

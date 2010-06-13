@@ -21,6 +21,13 @@
             android:key="PollTime"
             android:title="Poll Time"
             android:summary="Set Poll Time (ms)"
-            android:defaultValue="500" />
+            android:defaultValue="1000" />
+        <CheckBoxPreference
+			android:title="High Byte First"
+			android:defaultValue="false"
+			android:summary="This determines if the modbus device sends the higher byte of the word first"
+			android:key="HighByteFirst"
+			/>
 	</PreferenceCategory>
+
 </PreferenceScreen>

@@ -1,7 +1,12 @@
 package com.bencatlin.modbusdroid;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import net.wimpi.modbus.procimg.Register;
 import android.app.ListActivity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,22 +21,38 @@ import android.widget.TextView;
      */    
    class ModbusListView extends ListView {
 
-	    private Object modbusResponse;
-    	private String[] modbusDisplayValues;
+	   	private EfficientAdapter modbusAdapter;
+	    static private ArrayList<String> modbusResponse;
+	    private ArrayList<String> oldValues;
+    	private int regStartAddress;
+	    
+	    private String[] modbusDisplayValues;
     	private String[] modbusDisplayAddresses;
+    	public EfficientAdapter adapter = null;
     	
-    	public ModbusListView (Context context, Object modbusResponse ){
+    	public ModbusListView (Context context, ArrayList modbusResponse ){
     		super(context);
     		this.modbusResponse = modbusResponse;
-    		//this.modbusDisplayValues = modbusDisplayValues;
+    		this.oldValues = oldValues = (ArrayList<String>) modbusResponse.clone();
+    		// set the adapter immediately
+    		adapter  = new EfficientAdapter(context);
+    		this.setAdapter(adapter);
     	}
     	
+    	public void setStartAddress (int address) {
+    		regStartAddress = address;
+    		adapter.notifyDataSetChanged();
+    	}
+    	
+    	public int getStartAddress () {
+    		return regStartAddress;
+    	}
     	
     	/*
     	 * This is blantantly stolen from the example API code
     	 * and modified for my purposes
     	 */
-    	private static class EfficientAdapter extends BaseAdapter {
+    	public class EfficientAdapter extends BaseAdapter {
             private LayoutInflater mInflater;
             
 
@@ -51,7 +72,7 @@ import android.widget.TextView;
              * @see android.widget.ListAdapter#getCount()
              */
             public int getCount() {
-                return 1; //DATA.length;
+                return modbusResponse.size(); //DATA.length;
                 //TODO Fix later so that whatever data passed in is correctly 
             }
 
@@ -107,20 +128,56 @@ import android.widget.TextView;
                 }
 
                 // Bind the data efficiently with the holder.
-                //holder.text.setText(DATA[position]);
-                //holder.icon.setImageBitmap((position & 1) == 1 ? mIcon1 : mIcon2);
-                
+                //Log.i(getClass().getSimpleName(), "Set values for list row");
+                holder.value.setText( (String) modbusResponse.get(position));
+                holder.address.setText( Integer.toString(regStartAddress + position));
                 
                 return convertView;
             }
 
-            static class ViewHolder {
+            class ViewHolder {
                 TextView address;
                 TextView value;
             }
         }
     	
-    	
-    	
+    	public void SetDataFromBytes (byte[] bytes) {
+    		for (int i = 0; i < bytes.length ; i++) {
+    			//modbusResponse[i] = bytes[i];
+    			
+    		}
+    	}
+    	public void SetDataFromRegisters (Register[] reg) {
+    		boolean hasChanged = false;
+    		String tempString = null;
+    		if ( modbusResponse.size() != oldValues.size() ) {
+    			oldValues = (ArrayList<String>) modbusResponse.clone();
+    			hasChanged = true;
+    		}
+    		if (modbusResponse.size() > reg.length ) {
+    			modbusResponse.clear();
+    			hasChanged = true;
+    		}
+    		
+    		for (int i = 0; i < reg.length; i++ ) {
+    			if (i < modbusResponse.size() ) {
+    				modbusResponse.set(i, Integer.toString(reg[i].getValue()) );
+    				tempString = oldValues.get(i);
+    				//tempInt = modbusResponse.get(i).compareTo(tempString);
+    				if ( modbusResponse.get(i).compareTo(tempString) != 0 ) {
+    					hasChanged = true;
+    				}
+    			}
+    			else {
+    				modbusResponse.add(Integer.toString(reg[i].getValue() ) );
+    				hasChanged = true;
+    			}
+    		}
+    		if (hasChanged) {
+    			Log.i(getClass().getSimpleName(), "Updating Adapter Data" );
+    			oldValues = (ArrayList<String>) modbusResponse.clone();
+    			adapter.notifyDataSetChanged();
+    		}
+    	}
     	
     }

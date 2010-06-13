@@ -3,6 +3,7 @@ package com.bencatlin.modbusdroid;
 import android.widget.Toast;
 import net.wimpi.modbus.ModbusException;
 import net.wimpi.modbus.facade.ModbusTCPMaster;
+import net.wimpi.modbus.procimg.Register;
 import net.wimpi.modbus.util.BitVector;
 
 public class PollModbus extends ModbusTCPMaster implements Runnable {
@@ -23,6 +24,7 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	private static final int INPUT_REGISTER = 3;
 	private static final int HOLDING_REGISTER = 4;
 	
+	private ModbusListView m_ListView = null;
 	
 	/* PollModus Constructor
 	 *  adr = IP address
@@ -30,12 +32,14 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 *  poll time = 500ms
 	 */
 
-	public PollModbus (String adr, int port, int polltime, int ref, int count, int regType) {
+	public PollModbus (String adr, int port, int polltime, int ref, int count, 
+			int regType, ModbusListView m_ListView) {
 		super(adr, port);
 		this.setReference(ref);
 		this.setCount(count);
 		this.setPollTime(polltime);
 		this.setRegType(regType);
+		this.m_ListView = m_ListView;
 	}
 		
 	/**
@@ -111,6 +115,8 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 */
 	public void run() {
 		Object temp_obj = null;
+		//final BitVector bv = null;
+		//Register[] reg = null;
 		String temp_string = null;
 		try {
 			this.connect();
@@ -131,19 +137,50 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 				switch (m_registerType) {
 				case INPUT_DESCRETES:
 					
-					temp_obj = this.readInputDiscretes(m_reference, m_count);
-					temp_string = temp_obj.toString(); 
-					m_responseData = String2StringArray(temp_string);
+					final BitVector bv_descretes = this.readInputDiscretes(m_reference, m_count);
+					temp_string = bv_descretes.toString(); 
+					//m_ListView.SetDataFromBytes( bv_descretes.getBytes() );
+					//needs to be run in the UI thread
+					m_ListView.post( new Runnable() {
+						public void run() {
+							m_ListView.SetDataFromBytes( bv_descretes.getBytes() );
+						}
+					} );
+					//m_responseData = String2StringArray(temp_string);
 					break;
-				case HOLDING_COIL:	
-					//this.readCoils(m_reference, m_count).toString();
+				case HOLDING_COIL:
+					final BitVector bv_coils = this.readCoils(m_reference, m_count);
+					temp_string = bv_coils.toString();
+					
+					//needs to run back in the UI thread
+					m_ListView.post( new Runnable() {
+						public void run() {
+							m_ListView.SetDataFromBytes( bv_coils.getBytes() );
+						}
+					} );
+					
 					break;
 				case INPUT_REGISTER:
-					//this.readInputRegisters(m_reference, m_count).toString();
+					final Register[] reg_Input = (Register[]) this.readInputRegisters(m_reference, m_count);
+					//m_ListView.SetDataFromRegisters(reg);
+					//Post to UI Thread queue
+					m_ListView.post( new Runnable() {
+						public void run() {
+							m_ListView.SetDataFromRegisters(reg_Input);
+						}
+					} );
+					
 					break;
 				case HOLDING_REGISTER:
-					//this.readMultipleRegisters(m_reference, m_count).toString();
+					final Register[] reg_Holding = this.readMultipleRegisters(m_reference, m_count);
+					//m_ListView.SetDataFromRegisters(reg);
+					m_ListView.post( new Runnable() {
+						public void run() {
+							m_ListView.SetDataFromRegisters(reg_Holding);
+						}
+					} );
 					break;
+					
 				//For some lame-ass reason this has to be synchronized to work right
 				}
 				synchronized (this){ 

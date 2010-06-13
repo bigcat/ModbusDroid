@@ -3,6 +3,7 @@
         android:id="@+id/modbus_table"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
+        android:stretchColumns="1"
         >
 	<TableRow>
   		<TextView
@@ -11,6 +12,7 @@
         	android:layout_height="wrap_content"
         	android:text="Address" 
         	android:padding="3dip" 
+        	android:textSize="12pt"
         	android:gravity="center_horizontal"
         	/>
 		<TextView
@@ -18,7 +20,8 @@
         	android:layout_width="fill_parent"
         	android:layout_height="wrap_content"
         	android:text="Value" 
-        	android:padding="3dip" 
+        	android:padding="3dip"
+        	android:textSize="12pt" 
         	android:gravity="center_horizontal" />
 	</TableRow>
 </TableLayout>
