@@ -1,130 +1,64 @@
-//License
 /***
- * Java Modbus Library (jamod)
- * Copyright (c) 2002-2004, jamod development team
- * All rights reserved.
+ * Copyright 2002-2010 jamod development team
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * Neither the name of the author nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS
- * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  ***/
-/***
- * This class has been derived from FastInputStream code provided
- * with the Berkeley DB under following license conditions.
- *
- * Modifications include the naming, coding style as well as various
- * changed to make the class an extendable drop-in replacement for
- * ByteArrayInputStream.
- *
- * Copyright (c) 2000-2003
- *      Sleepycat Software.  All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Redistributions in any form must be accompanied by information on
- *    how to obtain complete source code for the DB software and any
- *    accompanying software that uses the DB software.  The source code
- *    must either be included in the distribution or be available for no
- *    more than the cost of distribution plus a nominal fee, and must be
- *    freely redistributable under reasonable conditions.  For an
- *    executable file, complete source code means the source code for all
- *    modules it contains.  It does not include source code for modules or
- *    files that typically accompany the major components of the operating
- *    system on which the executable file runs.
- *
- * THIS SOFTWARE IS PROVIDED BY SLEEPYCAT SOFTWARE ``AS IS'' AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
- * NON-INFRINGEMENT, ARE DISCLAIMED.  IN NO EVENT SHALL SLEEPYCAT SOFTWARE
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
- ***/
+
 package net.wimpi.modbus.io;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * This class is a replacement for ByteArrayInputStream that
- * does not synchronize every byte read.
+ * This class is a clean room implementation
+ * of the ByteArrayInputStream, with enhancements for
+ * speed (no synchronization for example).
  * <p/>
+ * The idea for such an implementation was originally
+ * obtained from Berkeley DB JE, however, this represents a
+ * clean-room implementation that is <em>NOT</em> derived
+ * from their implementation for license reasons and differs
+ * in implementation considerably. For compatibility reasons
+ * we have tried to conserve the interface as much as possible.
  *
- * @author Mark Hayes
- * @author Dieter Wimberger
- * 
- * @version 1.2rc1 (09/11/2004)
+ * @author Dieter Wimberger (wimpi)
+ * @version @version@ (@date@)
  */
 public class FastByteArrayInputStream
     extends InputStream {
 
-  /**
-   * Number of bytes in the input buffer.
-   */
   protected int count;
-  /**
-   * Actual position pointer into the input buffer.
-   */
   protected int pos;
-
-  /**
-   * Marked position pointer into the input buffer.
-   */
   protected int mark;
-  /**
-   * Input buffer <tt>byte[]</tt>.
-   */
   protected byte[] buf;
+  protected int readlimit = -1;
 
   /**
-   * Creates an input stream.
+   * Creates a new <tt>FastByteArrayInputStream</tt> instance
+   * that allows to read from the given byte array.
    *
-   * @param buffer the data to read.
+   * @param buffer the data to be read.
    */
   public FastByteArrayInputStream(byte[] buffer) {
     buf = buffer;
-    count = buffer.length;
+    count = buf.length;
     pos = 0;
     mark = 0;
-    //System.out.println("Buffer length="+buf.length );
-    //System.out.println("count=" + count + " pos=" + pos);
   }//constructor
 
   /**
-   * Creates an input stream.
+   * Creates a new <tt>FastByteArrayInputStream</tt> instance
+   * that allows to read from the given byte array.
    *
    * @param buffer the data to read.
    * @param offset the byte offset at which to begin reading.
@@ -136,91 +70,162 @@ public class FastByteArrayInputStream
     count = length;
   }//constructor
 
-  // --- begin ByteArrayInputStream compatible methods ---
-
-  public int available() {
-    return count - pos;
-  }//available
-
-  public boolean markSupported() {
-    return true;
-  }//markSupported
-
-  public void mark(int readlimit) {
-    //System.out.println("mark()");
-    mark = pos;
-    //System.out.println("mark=" + mark + " pos=" + pos);
-  }//mark
-
-  public void reset() {
-    //System.out.println("reset()");
-    pos = mark;
-    //System.out.println("mark=" + mark + " pos=" + pos);
-  }//reset
-
-  public long skip(long count) {
-    int myCount = (int) count;
-    if (myCount + pos > this.count) {
-      myCount = this.count - pos;
-    }
-    pos += myCount;
-    return myCount;
-  }//skip
-
+  /**
+   * Reads the next byte of data from this input stream. The value byte
+   * is returned as an int in the range 0 to 255. If no byte is available
+   * because the end of the stream has been reached, the value -1 is returned.
+   * <p/>
+   * This read method cannot block.
+   * </p>
+   *
+   * @return the next byte of data, or -1 if the end of the stream has been reached.
+   * @throws IOException
+   */
   public int read() throws IOException {
-    //System.out.println("read()");
-    //System.out.println("count=" + count + " pos=" + pos);
-    return (pos < count) ? (buf[pos++] & 0xff) : (-1);
+    if ((pos < count)) {
+      return (buf[pos++] & 0xff);
+    } else {
+      return (-1);
+    }
   }//read
 
-  public int read(byte[] toBuf) throws IOException {
-    //System.out.println("read(byte[])");
-    return read(toBuf, 0, toBuf.length);
-  }//read
-
+  /**
+   * Reads up to len bytes of data into an array of bytes from this input stream.
+   * If pos equals count, then -1 is returned to indicate end of file.
+   * Otherwise, the number k  of bytes read is equal to the smaller of
+   * len and count-pos. If k is positive, then bytes buf[pos] through buf[pos+k-1]
+   * are copied into b[off] through b[off+k-1] in the manner performed by
+   * System.arraycopy. The value k is added into pos  and k is returned.
+   *
+   * @param toBuf  the buffer into which the data is read.
+   * @param offset the start offset of the data.
+   * @param length the max number of bytes read.
+   * @return the total number of bytes read into the buffer, or -1 if there is no
+   *         more data because the end of the stream has been reached.
+   * @throws IOException
+   */
   public int read(byte[] toBuf, int offset, int length)
       throws IOException {
-    //System.out.println("read(byte[],int,int)");
     int avail = count - pos;
+
     if (avail <= 0) {
       return -1;
     }
     if (length > avail) {
       length = avail;
     }
-    for (int i = 0; i < length; i++) {
-      toBuf[offset++] = buf[pos++];
-    }
+    System.arraycopy(buf, pos, toBuf, offset, length);
+    pos += length;
+
     return length;
   }//read
 
-  // --- end ByteArrayInputStream compatible methods ---
+  public int read(byte[] toBuf) throws IOException {
+    return read(toBuf, 0, toBuf.length);
+  }//read
+
+  /**
+   * Skips over and discards n bytes of data from this input stream.
+   * The skip method may skip over some smaller number of bytes.
+   * The actual number of bytes skipped is returned, or a number <=0
+   * if none was skipped.
+   * <p/>
+   * The maximum number of bytes that can be skipped is defined by
+   * <tt>Integer.MAX_VALUE</tt>.
+   * </p>
+   *
+   * @param n the number of bytes to be skipped.
+   * @return the actual number of bytes skipped.
+   */
+  public long skip(long n) {
+    int skip = this.count - this.pos - (int) n;
+    if (skip > 0) {
+      pos += skip;
+    }
+    return skip;
+  }//skip
+
+  /**
+   * The close method for this <tt>FastByteArrayInputStream</tt>
+   * does nothing.
+   */
+  public void close() {
+    return;
+  }//close
+
+  /**
+   * Returns the number of bytes that can be read (or skipped over) from this
+   * <tt>FastByteArrayInputStream</tt>.
+   *
+   * @return the number of bytes that can be skipped.
+   */
+  public int available() {
+    return count - pos;
+  }//available
+
+  /**
+   * Marks the current position in this <tt>FastByteArrayInputStream</tt>.
+   * A subsequent call to{@link #reset()} will re-postition this <tt>FastByteArrayInputStream</tt>
+   * at the last marked position so that subsequent reads re-read the same bytes.
+   *
+   * @param limit a read limit that invalidates the mark if passed.
+   */
+  public void mark(int limit) {
+    mark = pos;
+    readlimit = limit;
+  }//mark
+
+  /**
+   * Tests if this <tt>FastByteArrayInputStream</tt>
+   * supports the mark and reset methods.
+   *
+   * @return true if supported, false otherwise.
+   */
+  public boolean markSupported() {
+    return true;
+  }//markSupported
+
+  /**
+   * Re-positions this stream to the position at
+   * the time the mark method was last called this <tt>FastByteArrayInputStream</tt>.
+   * @throws IOException if the readlimit was exceeded.
+   */
+  public void reset() throws IOException {
+    if(readlimit <0 || pos > mark+readlimit) {
+      pos = mark;
+      readlimit = -1;
+    } else {
+      mark = pos;
+      readlimit = -1;
+      throw new IOException("Readlimit exceeded.");
+    }
+  }//reset
 
   /**
    * Returns the underlying data being read.
    *
    * @return the underlying data.
    */
-  public byte[] getBufferBytes() {
+  public byte[] getBuffer() {
     return buf;
-  }//getBufferBytes
+  }//getBuffer
 
   /**
    * Returns the offset at which data is being read from the buffer.
    *
    * @return the offset at which data is being read.
    */
-  public int getBufferOffset() {
+  public int getPosition() {
     return pos;
-  }//getBufferOffset
+  }//getPosition
 
   /**
-   * Returns the end of the buffer being read.
+   * Returns the size of the buffer being read.
    *
-   * @return the end of the buffer.
+   * @return the size of the buffer.
    */
-  public int getBufferLength() {
+  public int size() {
     return count;
-  }//getBufferLength
+  }//size
 
 }//class FastByteArrayInputStream

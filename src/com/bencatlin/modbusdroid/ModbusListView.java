@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import net.wimpi.modbus.procimg.Register;
+import net.wimpi.modbus.util.BitVector;
 import android.app.ListActivity;
 import android.content.Context;
 import android.util.Log;
@@ -141,12 +142,44 @@ import android.widget.TextView;
             }
         }
     	
-    	public void SetDataFromBytes (byte[] bytes) {
-    		for (int i = 0; i < bytes.length ; i++) {
-    			//modbusResponse[i] = bytes[i];
-    			
+    	public void SetDataFromBitVector (BitVector bv) {
+    		boolean hasChanged = false;
+    		String tempString = null;
+    		
+    		Boolean LSBfirst = bv.isLSBAccess();
+    		
+    		if ( modbusResponse.size() != oldValues.size() ) {
+    			oldValues = (ArrayList<String>) modbusResponse.clone();
+    			hasChanged = true;
+    		}
+    		if (modbusResponse.size() > bv.size() ) {
+    			modbusResponse.clear();
+    			hasChanged = true;
+    		}
+    		
+    		for (int i = 0; i < bv.size(); i++ ) {
+    			if (i < modbusResponse.size() ) {
+    				
+    				modbusResponse.set(i, Boolean.toString(bv.getBit(i)) );
+    				tempString = oldValues.get(i);
+    				//tempInt = modbusResponse.get(i).compareTo(tempString);
+    				if ( modbusResponse.get(i).compareTo(tempString) != 0 ) {
+    					hasChanged = true;
+    				}
+    			}
+    			else {
+    				modbusResponse.add(Boolean.toString(bv.getBit(i) ) );
+    				hasChanged = true;
+    			}
+    		}
+    		if (hasChanged) {
+    			Log.i(getClass().getSimpleName(), "Updating Adapter Data" );
+    			oldValues = (ArrayList<String>) modbusResponse.clone();
+    			adapter.notifyDataSetChanged();
     		}
     	}
+    	
+    			
     	public void SetDataFromRegisters (Register[] reg) {
     		boolean hasChanged = false;
     		String tempString = null;

@@ -6,6 +6,20 @@ import net.wimpi.modbus.facade.ModbusTCPMaster;
 import net.wimpi.modbus.procimg.Register;
 import net.wimpi.modbus.util.BitVector;
 
+/*PollModbus
+ *  This is a runnable that polls in the background
+ *  
+ *  After being almost done with this, I think possibly extending 
+ *  ModbusTCPMaster is a mistake, and it would have been simpler
+ *  to just make a modbusmaster instance a member that is public, or
+ *  has public methods for manipulation - maybe I'll fix that in
+ *  the future as I have time, as this was mostly a learning experience
+ *  for getting back into writing software, I'm not too worried about it.
+ *  Ben Catlin - 6/24/2010
+ * 
+ */
+
+
 public class PollModbus extends ModbusTCPMaster implements Runnable {
 	
 	private int m_polltime;
@@ -34,6 +48,7 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 
 	public PollModbus (String adr, int port, int polltime, int ref, int count, 
 			int regType, ModbusListView m_ListView) {
+		
 		super(adr, port);
 		this.setReference(ref);
 		this.setCount(count);
@@ -138,12 +153,13 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 				case INPUT_DESCRETES:
 					
 					final BitVector bv_descretes = this.readInputDiscretes(m_reference, m_count);
+					//bv_descretes.toggleAccess(true);
 					temp_string = bv_descretes.toString(); 
 					//m_ListView.SetDataFromBytes( bv_descretes.getBytes() );
 					//needs to be run in the UI thread
 					m_ListView.post( new Runnable() {
 						public void run() {
-							m_ListView.SetDataFromBytes( bv_descretes.getBytes() );
+							m_ListView.SetDataFromBitVector( bv_descretes );
 						}
 					} );
 					//m_responseData = String2StringArray(temp_string);
@@ -155,7 +171,7 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 					//needs to run back in the UI thread
 					m_ListView.post( new Runnable() {
 						public void run() {
-							m_ListView.SetDataFromBytes( bv_coils.getBytes() );
+							m_ListView.SetDataFromBitVector( bv_coils );
 						}
 					} );
 					
@@ -180,11 +196,15 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 						}
 					} );
 					break;
-					
-				//For some lame-ass reason this has to be synchronized to work right
 				}
-				synchronized (this){ 
-					this.wait(m_polltime);
+				//For some lame-ass reason this has to be synchronized to work right
+				if (m_polltime != 0 ) {
+					synchronized (this){ 
+						this.wait(m_polltime);
+					}
+				}
+				else {
+					this.disconnect();
 				}
 			}			
 		}

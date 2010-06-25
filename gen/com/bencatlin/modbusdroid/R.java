@@ -45,11 +45,10 @@ public final class R {
         public static final int modbus_value_row=0x7f030002;
     }
     public static final class string {
-        public static final int Conn_Settings=0x7f060003;
-        public static final int app_name=0x7f060001;
-        public static final int hello=0x7f060000;
-        public static final int modbus_prefs=0x7f060004;
-        public static final int point_type_prompt=0x7f060002;
+        public static final int Conn_Settings=0x7f060002;
+        public static final int app_name=0x7f060000;
+        public static final int modbus_prefs=0x7f060003;
+        public static final int point_type_prompt=0x7f060001;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;

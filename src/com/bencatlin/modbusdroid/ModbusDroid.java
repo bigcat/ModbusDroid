@@ -7,6 +7,7 @@ import java.util.Arrays;
 import com.developerlife.Utils.LayoutUtils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,8 +17,14 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup.LayoutParams;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.LayoutAnimationController;
+import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -47,8 +54,16 @@ public class ModbusDroid extends Activity {
 	private int offset;
 	private int m_count;
 	private int regType;
+	
+	private String oldHostIPaddress = hostIPaddress;
+	private int oldPollTime = pollTime;
+	private int oldHostPort = hostPort;
+	
 	private PollModbus mb = null;
 	private ModbusListView mbList;
+	private RelativeLayout mainLayout;
+	private TextView notConnTextView;
+	private RelativeLayout.LayoutParams listParams;
 	
 	private SharedPreferences settings;
 	Thread mbThread = null;
@@ -98,18 +113,23 @@ public class ModbusDroid extends Activity {
         
         Log.i(getClass().getSimpleName(), "Try to bind listview to main view");
         //need to get the parent relative layout before adding the view
-        RelativeLayout mainLayout = (RelativeLayout) findViewById(R.id.main_layout);
+        mainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         //add a rule
-        RelativeLayout.LayoutParams listParams = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+        listParams = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
         
         listParams.addRule(mainLayout.BELOW, R.id.param_table);
         listParams.setMargins(10, 5, 10, 5);
+        setLayoutAnim_slideupfrombottom(mbList, this);
         
         //make it invisible until we need it - this doesn't work yet
         //mbList.setVisibility(2);
+        notConnTextView = new TextView(this);
+        notConnTextView.setText("Not Connected!");
+        //notConnTextView.setId(Integer.parseInt("NotConnected")); // This is busted - fix it
         
-        mainLayout.addView(mbList, listParams);
-
+        //mainLayout.addView(mbList, listParams);
+        mainLayout.addView(notConnTextView, listParams);
+        
         // get a new Poll modbus object that we will pass to the thread starter
         mb = new PollModbus(hostIPaddress, hostPort, pollTime, offset,	m_count, regType, mbList);  
        
@@ -131,7 +151,23 @@ public class ModbusDroid extends Activity {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
                 	offset = Integer.parseInt(offset_editText.getText().toString());
                 	mb.setReference(offset);
-                	mbList.setStartAddress(((regType)*10000) + offset);
+                	switch (regType) {
+                	
+                	case 1:
+                		mbList.setStartAddress(1000 + offset);
+                		break;
+                	case 2:
+                		mbList.setStartAddress(0000 + offset);
+                		break;
+                	case 3:
+                		mbList.setStartAddress(3000 + offset);
+                		break;
+                	case 4:
+                		mbList.setStartAddress(4000 + offset);
+                		
+                	}
+              
+                	//mbList.setStartAddress(((regType)*10000) + offset);
                 	//Hide the keyboard
                 	InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                 	imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
@@ -151,7 +187,21 @@ public class ModbusDroid extends Activity {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                 	offset = Integer.parseInt(offset_editText.getText().toString());
                 	mb.setReference(offset);
-                	mbList.setStartAddress(((regType)*10000) + offset);
+                	
+                	switch (regType) {
+                		case 1:
+                			mbList.setStartAddress(1000 + offset);
+                			break;
+                		case 2:
+                			mbList.setStartAddress(0000 + offset);
+                			break;
+                		case 3:
+                			mbList.setStartAddress(3000 + offset);
+                			break;
+                		case 4:
+                			mbList.setStartAddress(4000 + offset);
+                	}
+
                 	//Hide the keyboard
                 	InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                 	imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
@@ -213,24 +263,11 @@ public class ModbusDroid extends Activity {
     /* Handles item selections */
     public boolean onOptionsItemSelected(MenuItem item) {
     	
-    	String oldHostIPaddress = hostIPaddress;
-    	int oldPollTime = pollTime;
-    	int oldHostPort = hostPort;
-    	
         switch (item.getItemId()) {
         case SETTINGS:
-        	startActivity(new Intent(this, connectionSettings.class));
-
-        	getSharedSettings();	
-        	
-        	if ( (hostIPaddress != oldHostIPaddress) || (oldHostPort != hostPort ) ) {
-        		if (mb.isConnected()){
-        			mb.disconnect();
-        		}
-        		mb.setIPAddress(hostIPaddress);
-        		//mb.setPort(hostPort);
-        	}       	
-            return(true);
+        	startActivityForResult(new Intent(this, connectionSettings.class), 0);
+            
+        	return(true);
             
         case CONNECT:
         	
@@ -260,7 +297,11 @@ public class ModbusDroid extends Activity {
         	
         	if (mb.isConnected()){
         		Toast.makeText(this, "Connected!!!!", 5).show();
+        		
         	}
+        	
+        	mainLayout.removeView(notConnTextView);
+        	mainLayout.addView(mbList, listParams);
         	//showView(mbList);
         	
         	return true;
@@ -275,7 +316,9 @@ public class ModbusDroid extends Activity {
         		Toast.makeText(this, "Disconnected from " + hostIPaddress, 10).show();
         	}
         	
-        	hideView(mbList);
+        	mainLayout.removeView(mbList);
+        	mainLayout.addView(notConnTextView);
+        	//hideView(mbList);
         	
         	return true;
         case QUIT_MENU:
@@ -283,6 +326,38 @@ public class ModbusDroid extends Activity {
             return true;
         }
         return false;
+    }
+    
+    /*
+     * onActivityResult
+     * Overrides the default Android method
+     * Calls the default, and then re-checks the preferences, and if they have changed
+     * this disconnects from the current server and sets a new IP address or port
+     * 
+     * In the future, it would be wise to actually set a result code if we add
+     * more than one activity, and then take action based on which activity is returning.
+     * Until there is more than one activity, this can be left alone and assumed it is always
+     * the preference activity.
+     * 
+     * (non-Javadoc)
+     * @see android.app.Activity#onActivityResult(int, int, android.content.Intent)
+     */
+    
+    @Override
+    public void onActivityResult ( int reqCode, int resultCode, Intent data ) {
+    	super.onActivityResult(reqCode, resultCode, data);
+    	
+    	getSharedSettings();	
+    	
+    	if ( (hostIPaddress != oldHostIPaddress) || (oldHostPort != hostPort ) ) {
+    		if (mb.isConnected()){
+    			mb.disconnect();
+    		}
+    		mb.setIPAddress(hostIPaddress);
+    		//mb.setPort(hostPort);  //TODO: Add method to PollModbus later
+    	}       	
+    
+    
     }
     
     /**
@@ -293,7 +368,8 @@ public class ModbusDroid extends Activity {
     	hostIPaddress = settings.getString(IP_ADDRESS_PREFERENCE, "10.0.2.2");
         hostPort = Integer.parseInt(settings.getString(PORT_PREFERENCE, "502"));
         pollTime = Integer.parseInt(settings.getString(POLL_TIME_PREFERENCE, "500"));
-    }
+    } //getSharedSettings
+    
     private void hideView (View v) {
     	v.setVisibility(1);
     }
@@ -301,4 +377,29 @@ public class ModbusDroid extends Activity {
     private void showView (View v) {
     	v.setVisibility(0);
     }
+    
+    
+    public static void setLayoutAnim_slideupfrombottom(ViewGroup panel, Context ctx) {
+
+    	  AnimationSet set = new AnimationSet(true);
+
+    	  Animation animation = new AlphaAnimation(0.0f, 1.0f);
+    	  animation.setDuration(500);
+    	  set.addAnimation(animation);
+
+    	  animation = new TranslateAnimation(
+    	      Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 0.0f,
+    	      Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0.0f
+    	  );
+    	  animation.setDuration(500);
+    	  set.addAnimation(animation);
+
+    	//  set.setFillBefore(false);
+    	//  set.setFillAfter(false);
+
+    	  LayoutAnimationController controller =
+    	      new LayoutAnimationController(set, 0.25f);
+    	  panel.setLayoutAnimation(controller);
+
+    	}
 }
