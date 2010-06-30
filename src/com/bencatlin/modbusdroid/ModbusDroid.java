@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.developerlife.Utils.LayoutUtils;
+import com.serotonin.modbus4j.ModbusFactory;
+import com.serotonin.modbus4j.ModbusMaster;
+import com.serotonin.modbus4j.ip.IpParameters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -39,6 +42,10 @@ import android.widget.AdapterView.OnItemSelectedListener;
 public class ModbusDroid extends Activity {
     
 	/** Called when the activity is first created. */
+
+	/* Menu constants
+	 * 
+	 */
 	private static final int SETTINGS = Menu.FIRST + 2;
 	private static final int CONNECT = Menu.FIRST;
 	private static final int DISCONNECT = Menu.FIRST + 1;
@@ -48,8 +55,13 @@ public class ModbusDroid extends Activity {
 	private static final String PORT_PREFERENCE = "PortSetting";
 	private static final String POLL_TIME_PREFERENCE = "PollTime";
 	
+	private IpParameters ipParameters;
+	private ModbusFactory mbFactory;
+	private ModbusMaster mbTCPMaster;	
+	
 	private String hostIPaddress;
 	private int hostPort;
+	
 	private int pollTime;
 	private int offset;
 	private int m_count;
@@ -70,6 +82,11 @@ public class ModbusDroid extends Activity {
 	
 	private ArrayList<String> modbusData;
 	
+	
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onResume()
+	 */
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -77,14 +94,18 @@ public class ModbusDroid extends Activity {
 		if (settings == null) {
 			settings = PreferenceManager.getDefaultSharedPreferences(this);
 		}
+		
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	 */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        
-        
+            
         final EditText offset_editText = (EditText) findViewById(R.id.offset);
         final EditText registerLength = (EditText) findViewById(R.id.length);
         
@@ -99,19 +120,20 @@ public class ModbusDroid extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s.setAdapter(adapter);
         
+        
         //get the preferences currently stored in the SharedPreferences
         getSharedSettings();
         
-        offset = Integer.parseInt(offset_editText.getText().toString());
-        m_count = Integer.parseInt(registerLength.getText().toString());
-        regType = s.getSelectedItemPosition() + 1;
-
+        //Set values in UI elements according to shared preferences
+        offset_editText.setText(Integer.toString(offset));
+        registerLength.setText(Integer.toString(m_count));
+        s.setSelection(regType - 1);
+        
         //lets get our new list
         modbusData = new ArrayList<String> (Arrays.asList("Not Connected"));
         mbList = new ModbusListView(this, modbusData);
         mbList.setFocusable(false);
         
-        Log.i(getClass().getSimpleName(), "Try to bind listview to main view");
         //need to get the parent relative layout before adding the view
         mainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         //add a rule
@@ -122,10 +144,8 @@ public class ModbusDroid extends Activity {
         setLayoutAnim_slideupfrombottom(mbList, this);
         
         //make it invisible until we need it - this doesn't work yet
-        //mbList.setVisibility(2);
         notConnTextView = new TextView(this);
         notConnTextView.setText("Not Connected!");
-        //notConnTextView.setId(Integer.parseInt("NotConnected")); // This is busted - fix it
         
         //mainLayout.addView(mbList, listParams);
         mainLayout.addView(notConnTextView, listParams);
@@ -133,24 +153,36 @@ public class ModbusDroid extends Activity {
         // get a new Poll modbus object that we will pass to the thread starter
         mb = new PollModbus(hostIPaddress, hostPort, pollTime, offset,	m_count, regType, mbList);  
        
+        // Set up Listeners for
+        // all the different changes on the main screen
+        
+        // Listener for spinner selection
         s.setOnItemSelectedListener( new OnItemSelectedListener() {
         		public void onItemSelected ( AdapterView<?> parent, View view, int pos, long id) {
     					regType = s.getSelectedItemPosition() + 1;        				
         				mb.setRegType(regType);
         				mbList.setStartAddress(((regType)*10000) + offset);
+        				SharedPreferences.Editor editor = settings.edit();
+        				editor.putInt("registerType", regType);
+        				editor.commit();
         		    }
         		    public void onNothingSelected(AdapterView parent) {
         		      // Do nothing.
         		    }
         });
-      
-        //register keypress handler to change register offset
 
+        
+        //register keypress handler to change register offset
         offset_editText.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
                 	offset = Integer.parseInt(offset_editText.getText().toString());
                 	mb.setReference(offset);
+                	
+                	SharedPreferences.Editor editor = settings.edit();
+    				editor.putInt("registerOffset", offset);
+    				editor.commit();
+    				
                 	switch (regType) {
                 	
                 	case 1:
@@ -163,11 +195,11 @@ public class ModbusDroid extends Activity {
                 		mbList.setStartAddress(3000 + offset);
                 		break;
                 	case 4:
-                		mbList.setStartAddress(4000 + offset);
-                		
+                		mbList.setStartAddress(4000 + offset);	
                 	}
-              
-                	//mbList.setStartAddress(((regType)*10000) + offset);
+                	
+                	
+                	
                 	//Hide the keyboard
                 	InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                 	imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
@@ -187,6 +219,10 @@ public class ModbusDroid extends Activity {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                 	offset = Integer.parseInt(offset_editText.getText().toString());
                 	mb.setReference(offset);
+                	
+                	SharedPreferences.Editor editor = settings.edit();
+    				editor.putInt("registerOffset", offset);
+    				editor.commit();
                 	
                 	switch (regType) {
                 		case 1:
@@ -218,6 +254,11 @@ public class ModbusDroid extends Activity {
                 if ( (event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER) ) {
                		m_count = Integer.parseInt(registerLength.getText().toString());
                		mb.setCount(m_count);
+               		
+                	SharedPreferences.Editor editor = settings.edit();
+    				editor.putInt("registerCount", m_count);
+    				editor.commit();
+               		
                		//Hide the keyboard
                    	InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                    	imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
@@ -239,6 +280,11 @@ public class ModbusDroid extends Activity {
         		if ( actionId == EditorInfo.IME_ACTION_DONE ) {
         			m_count = Integer.parseInt(registerLength.getText().toString());
                		mb.setCount(m_count);
+               		
+                	SharedPreferences.Editor editor = settings.edit();
+    				editor.putInt("registerCount", m_count);
+    				editor.commit();
+               		
                		// Hide Keyboard
                    	InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                    	imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
@@ -284,7 +330,7 @@ public class ModbusDroid extends Activity {
     		}
         	else if (mbThread.isAlive()) {
         		mbThread.interrupt();
-        		mbThread = null;
+        		mbThread.destroy();
         		mbThread = new Thread(mb, "PollingThread");
         	}
         	else {
@@ -353,10 +399,12 @@ public class ModbusDroid extends Activity {
     		if (mb.isConnected()){
     			mb.disconnect();
     		}
-    		mb.setIPAddress(hostIPaddress);
+    		
+    		ipParameters.setHost(hostIPaddress);
+    		ipParameters.setPort(hostPort);
+    		//mb.setIPAddress(hostIPaddress);
     		//mb.setPort(hostPort);  //TODO: Add method to PollModbus later
-    	}       	
-    
+    	}
     
     }
     
@@ -368,17 +416,16 @@ public class ModbusDroid extends Activity {
     	hostIPaddress = settings.getString(IP_ADDRESS_PREFERENCE, "10.0.2.2");
         hostPort = Integer.parseInt(settings.getString(PORT_PREFERENCE, "502"));
         pollTime = Integer.parseInt(settings.getString(POLL_TIME_PREFERENCE, "500"));
+        
+        m_count = settings.getInt("registerCount", 1);
+        
+        offset = settings.getInt("registerOffset", 0);
+        
+        regType = settings.getInt("registerType", 0);
+        
     } //getSharedSettings
     
-    private void hideView (View v) {
-    	v.setVisibility(1);
-    }
-    
-    private void showView (View v) {
-    	v.setVisibility(0);
-    }
-    
-    
+    // Add some annimation to things - sliding in from the bottom
     public static void setLayoutAnim_slideupfrombottom(ViewGroup panel, Context ctx) {
 
     	  AnimationSet set = new AnimationSet(true);

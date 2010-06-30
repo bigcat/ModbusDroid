@@ -1,18 +1,20 @@
 package com.bencatlin.modbusdroid;
 
+/*
 import net.wimpi.modbus.procimg.Register;
 import net.wimpi.modbus.util.BitVector;
 
+*/
 
 public class modbusDataWrapper {
 	
-	private BitVector m_descretes;
-	private Register[] m_registers;
+/*	private BitVector m_descretes;
+	private Register[] m_registers; */
 	private Boolean highByteFirst;
 	private Boolean highWordFirst;
 	private Boolean MSBfirst; //Most significant bit first - may not need this
 	
-	
+/*	
 	public modbusDataWrapper () {
 		m_descretes = null;
 		m_registers = null;
@@ -40,7 +42,7 @@ public class modbusDataWrapper {
 		}
 		
 	}
-	
+*/	
 	
 	
 	

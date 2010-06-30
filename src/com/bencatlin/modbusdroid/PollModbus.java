@@ -1,12 +1,19 @@
 package com.bencatlin.modbusdroid;
 
+
+import com.serotonin.modbus4j.ModbusFactory;
 import android.widget.Toast;
+
+/* After switching all the way from jamodbus to modbus4j
+ * we don't need these anymore, need the modbus4j instead
+ * 
 import net.wimpi.modbus.ModbusException;
 import net.wimpi.modbus.facade.ModbusTCPMaster;
 import net.wimpi.modbus.procimg.Register;
 import net.wimpi.modbus.util.BitVector;
+*/
 
-/*PollModbus
+/*PollModbus_old
  *  This is a runnable that polls in the background
  *  
  *  After being almost done with this, I think possibly extending 
@@ -20,7 +27,7 @@ import net.wimpi.modbus.util.BitVector;
  */
 
 
-public class PollModbus extends ModbusTCPMaster implements Runnable {
+public class PollModbus implements Runnable {
 	
 	private int m_polltime;
 	private boolean m_connected;
@@ -49,20 +56,12 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	public PollModbus (String adr, int port, int polltime, int ref, int count, 
 			int regType, ModbusListView m_ListView) {
 		
-		super(adr, port);
+		//super(adr, port);
 		this.setReference(ref);
 		this.setCount(count);
 		this.setPollTime(polltime);
 		this.setRegType(regType);
 		this.m_ListView = m_ListView;
-	}
-		
-	/**
-	 * Gets current polltime
-	 * @return polltime
-	 */
-	public int getPollTime() {
-		return m_polltime;
 	}
 	
 	/**
@@ -81,6 +80,9 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 		this.m_count = count;
 	}
 	
+	/*
+	 * 
+	 */
 	public synchronized void setRegType (int regType) {
 		this.m_registerType = regType;
 	}
@@ -94,7 +96,7 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 */
 	public void connect() throws Exception {
 		try {
-			super.connect();
+			//super.connect();
 			m_connected = true;
 			// need to start polling thread here - should I create the thread object
 		}
@@ -128,7 +130,8 @@ public class PollModbus extends ModbusTCPMaster implements Runnable {
 	 * 
 	 * 
 	 */
-	public void run() {
+	
+	public void run () {
 		Object temp_obj = null;
 		//final BitVector bv = null;
 		//Register[] reg = null;
