@@ -2,9 +2,6 @@ package com.bencatlin.modbusdroid;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import net.wimpi.modbus.procimg.Register;
-import net.wimpi.modbus.util.BitVector;
 import android.app.ListActivity;
 import android.content.Context;
 import android.util.Log;
@@ -17,24 +14,28 @@ import android.widget.TextView;
 
     /**
      * Draws the register table dynamically
-     * @author bcatlin
+     * @author Ben Catlin
      *
      */    
    class ModbusListView extends ListView {
 
 	   	private EfficientAdapter modbusAdapter;
-	    static private ArrayList<String> modbusResponse;
-	    private ArrayList<String> oldValues;
+	    static private Object[] modbusResponse;
+	    private Object[] oldValues;
     	private int regStartAddress;
 	    
 	    private String[] modbusDisplayValues;
     	private String[] modbusDisplayAddresses;
     	public EfficientAdapter adapter = null;
     	
-    	public ModbusListView (Context context, ArrayList modbusResponse ){
+    	/** Constructor
+    	 * @param context
+    	 * @param modbusResponse - data passed to list adapter
+    	 */
+    	public ModbusListView (Context context, Object[] modbusResponse) {
     		super(context);
     		this.modbusResponse = modbusResponse;
-    		this.oldValues = oldValues = (ArrayList<String>) modbusResponse.clone();
+    		this.oldValues = oldValues = modbusResponse.clone();
     		// set the adapter immediately
     		adapter  = new EfficientAdapter(context);
     		this.setAdapter(adapter);
@@ -73,13 +74,13 @@ import android.widget.TextView;
              * @see android.widget.ListAdapter#getCount()
              */
             public int getCount() {
-                return modbusResponse.size(); //DATA.length;
-                //TODO Fix later so that whatever data passed in is correctly 
+                return modbusResponse.length; //DATA.length;
+                //TODO Fix later so that whatever data passed in is correctly Handled
             }
 
             /**
              * Since the data comes from an array, just returning the index is
-             * sufficent to get at the data. If we were using a more complex data
+             * sufficient to get at the data. If we were using a more complex data
              * structure, we would return whatever object represents one row in the
              * list.
              *
@@ -130,7 +131,7 @@ import android.widget.TextView;
 
                 // Bind the data efficiently with the holder.
                 //Log.i(getClass().getSimpleName(), "Set values for list row");
-                holder.value.setText( (String) modbusResponse.get(position));
+                holder.value.setText( (String) modbusResponse[position].toString());
                 holder.address.setText( Integer.toString(regStartAddress + position));
                 
                 return convertView;
@@ -141,6 +142,16 @@ import android.widget.TextView;
                 TextView value;
             }
         }
+
+    	
+    	public void updateData (Object [] values ) {
+    		if ( (values.getClass() != modbusResponse.getClass() ) || !(Arrays.equals(values, modbusResponse)) ) {
+    			modbusResponse = values.clone();
+    			adapter.notifyDataSetChanged();
+    		}
+    	}
+    	
+    	/* Time to completely rework this for new library
     	
     	public void SetDataFromBitVector (BitVector bv) {
     		boolean hasChanged = false;
@@ -211,6 +222,6 @@ import android.widget.TextView;
     			oldValues = (ArrayList<String>) modbusResponse.clone();
     			adapter.notifyDataSetChanged();
     		}
-    	}
+    	} */
     	
     }

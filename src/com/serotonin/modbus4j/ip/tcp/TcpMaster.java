@@ -53,6 +53,7 @@ public class TcpMaster extends ModbusMaster {
     @Override
     synchronized public void destroy() {
         closeConnection();
+        initialized = false;
     }
 
     @Override

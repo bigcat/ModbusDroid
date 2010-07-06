@@ -3,8 +3,8 @@
     <string-array name="pointTypes">
         <item>Discrete Inputs</item>
         <item>Holding Coils</item>
-        <item>Input Registers</item>
         <item>Holding Registers</item>
+        <item>Input Registers</item>
     </string-array>
 
 </resources>

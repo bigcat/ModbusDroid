@@ -11,10 +11,10 @@ import com.serotonin.modbus4j.exception.ModbusIdException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 
 public class ModbusLocator {
-    private final SlaveAndRange slaveAndRange;
-    private final int offset;
-    private final int dataType;
-    private byte bit = -1;
+    protected SlaveAndRange slaveAndRange;
+    protected int offset;
+    protected int dataType;
+    protected byte bit = -1;
     
     public ModbusLocator(SlaveAndRange slaveAndRange, int offset, int dataType) {
         this(slaveAndRange, offset, dataType, (byte)-1);
@@ -43,7 +43,7 @@ public class ModbusLocator {
     }
     
     
-    private void validate() {
+    protected void validate() {
         try {
             ModbusUtils.validateOffset(offset);
             ModbusUtils.validateEndOffset(offset + DataType.getRegisterCount(dataType) - 1);

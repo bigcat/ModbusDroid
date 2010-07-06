@@ -1,7 +1,10 @@
 package com.bencatlin.modbusdroid;
 
 
-import com.serotonin.modbus4j.ModbusFactory;
+import com.serotonin.modbus4j.code.RegisterRange;
+import com.serotonin.modbus4j.exception.ModbusTransportException;
+
+import android.util.Log;
 import android.widget.Toast;
 
 /* After switching all the way from jamodbus to modbus4j
@@ -35,10 +38,11 @@ public class PollModbus implements Runnable {
 	// This defines what register type we want to read/write
 	// 0 = initial state, 1 = input descretes, 2 = holding coil, 
 	// 3 = input register 4 = holding register
-	private int m_registerType = 0;  
-	private int m_reference = 0; // register/coil offset
-	private int m_count = 1;  // number of registers/coils to read
-	private String[] m_responseData;
+	
+	private Object[] modbusValues;
+	
+	private ModbusTCPMaster mbTCPMaster;
+	private ModbusMultiLocator mbLocator;
 	
 	private static final int INPUT_DESCRETES = 1;
 	private static final int HOLDING_COIL = 2;
@@ -53,14 +57,12 @@ public class PollModbus implements Runnable {
 	 *  poll time = 500ms
 	 */
 
-	public PollModbus (String adr, int port, int polltime, int ref, int count, 
-			int regType, ModbusListView m_ListView) {
+	public PollModbus (ModbusTCPMaster mbMaster, int polltime, ModbusMultiLocator mbLocator, ModbusListView m_ListView) {
 		
 		//super(adr, port);
-		this.setReference(ref);
-		this.setCount(count);
-		this.setPollTime(polltime);
-		this.setRegType(regType);
+		this.m_polltime = polltime;
+		this.mbTCPMaster = mbMaster;
+		this.mbLocator = mbLocator;
 		this.m_ListView = m_ListView;
 	}
 	
@@ -72,39 +74,24 @@ public class PollModbus implements Runnable {
 		this.m_polltime = polltime;
 	}
 	
-	public synchronized void setReference (int ref) {
-		this.m_reference = ref;
-	}
-	
-	public synchronized void setCount (int count) {
-		this.m_count = count;
-	}
-	
-	/*
-	 * 
-	 */
-	public synchronized void setRegType (int regType) {
-		this.m_registerType = regType;
-	}
-	
-	/*public void setIPaddress (String IPaddress) {
-		
-	}*/
-	
 	/**
 	 * Connects to server and starts polling thread
 	 */
 	public void connect() throws Exception {
+		if (this.isConnected()) {
+			this.disconnect();
+		}
 		try {
-			//super.connect();
-			m_connected = true;
-			// need to start polling thread here - should I create the thread object
+			mbTCPMaster.init();
+			
 		}
 		catch (Exception e) {
-			e.getMessage();
+			Log.e(getClass().getSimpleName(), e.getMessage() );
+			m_connected = false;
 			//Toast.makeText(this, e.getMessage().toString(), 10).show();
-			// do something -- figure this out later
+			//TODO: do something here to catch other exceptions -- figure this out later
 		}
+		m_connected = true;
 	}
 	
 	/**
@@ -112,8 +99,8 @@ public class PollModbus implements Runnable {
 	 *  This will cause the thread to complete that is doing the polling
 	 */
 	public void disconnect() {
-		if (m_connected)
-			super.disconnect();
+		if (m_connected || mbTCPMaster.isInitialized() )
+			mbTCPMaster.destroy();
 		m_connected = false;
 	}
 	
@@ -122,7 +109,12 @@ public class PollModbus implements Runnable {
 	 * 
 	 */
 	public boolean isConnected() {
-		m_connected = super.isConnected();
+		
+		if ( mbTCPMaster.isInitialized() )
+			m_connected = true;
+		else
+			m_connected = false;
+		
 		return m_connected;
 	}
 
@@ -132,28 +124,39 @@ public class PollModbus implements Runnable {
 	 */
 	
 	public void run () {
-		Object temp_obj = null;
-		//final BitVector bv = null;
-		//Register[] reg = null;
-		String temp_string = null;
-		try {
-			this.connect();
-		}
-		catch (RuntimeException runtime_e)
-		{
-			String errormsg = runtime_e.getMessage();
-			//Need a way to get a debug message here
-		}
-		catch (Exception connect_e)
-		{	
-			String errormsg = connect_e.getMessage();
-			//Need a way to get a debug message here too
-		}
+		modbusValues = null;
 		
+		if (!this.isConnected()) {
+			try {
+				this.connect();
+			}
+			catch (RuntimeException runtime_e)
+			{
+				String errormsg = runtime_e.getMessage();
+				Log.i(getClass().getSimpleName(), runtime_e.getMessage() );
+				//Need a way to get a debug message here
+			}
+			catch (Exception connect_e)
+			{	
+				String errormsg = connect_e.getMessage();
+				Log.i(getClass().getSimpleName(), connect_e.getMessage() );
+			//Need a way to get a debug message here too
+			}
+		}
 		try {
 			while (m_connected) {
-				switch (m_registerType) {
-				case INPUT_DESCRETES:
+				
+				modbusValues = mbTCPMaster.getValues(mbLocator);
+				
+				m_ListView.post( new Runnable() {
+					public void run() {
+						m_ListView.updateData(modbusValues);
+					}
+				});
+				/*  //This gets to go away and is replaced by new library calls
+
+				switch (mbLocator.getSlaveAndRange().getRange()) {
+				case RegisterRange.INPUT_STATUS:
 					
 					final BitVector bv_descretes = this.readInputDiscretes(m_reference, m_count);
 					//bv_descretes.toggleAccess(true);
@@ -167,7 +170,7 @@ public class PollModbus implements Runnable {
 					} );
 					//m_responseData = String2StringArray(temp_string);
 					break;
-				case HOLDING_COIL:
+				case RegisterRange.COIL_STATUS:
 					final BitVector bv_coils = this.readCoils(m_reference, m_count);
 					temp_string = bv_coils.toString();
 					
@@ -179,7 +182,7 @@ public class PollModbus implements Runnable {
 					} );
 					
 					break;
-				case INPUT_REGISTER:
+				case RegisterRange.INPUT_REGISTER:
 					final Register[] reg_Input = (Register[]) this.readInputRegisters(m_reference, m_count);
 					//m_ListView.SetDataFromRegisters(reg);
 					//Post to UI Thread queue
@@ -190,7 +193,7 @@ public class PollModbus implements Runnable {
 					} );
 					
 					break;
-				case HOLDING_REGISTER:
+				case RegisterRange.HOLDING_REGISTER:
 					final Register[] reg_Holding = this.readMultipleRegisters(m_reference, m_count);
 					//m_ListView.SetDataFromRegisters(reg);
 					m_ListView.post( new Runnable() {
@@ -199,7 +202,10 @@ public class PollModbus implements Runnable {
 						}
 					} );
 					break;
-				}
+					
+				} */
+				
+				
 				//For some lame-ass reason this has to be synchronized to work right
 				if (m_polltime != 0 ) {
 					synchronized (this){ 
@@ -211,14 +217,14 @@ public class PollModbus implements Runnable {
 				}
 			}			
 		}
-		catch (ModbusException m_exception) {
-			String error = m_exception.getMessage();
+		catch (ModbusTransportException m_exception) {
+			Log.e(getClass().getSimpleName(), m_exception.getMessage() );
 		}
 		/*catch (IOException IOe) {
 			
 		}*/
 		catch (Exception poll_e) {
-			String error = poll_e.getMessage();
+			Log.e(getClass().getSimpleName(), poll_e.getMessage() );
 			//if (m_connected) {
 				//this.disconnect();
 			//}
@@ -226,23 +232,6 @@ public class PollModbus implements Runnable {
 		}
 	}
 	
-	private String[] String2StringArray (String str) throws Exception {
-		int strIndex = 0;
-		char temp;
-		String[] stringArray = new String[str.length()];
-		for (int i = str.length()-1; i >= 0; i--) {
-			try {
-				temp = str.charAt(i);
-			}
-			catch (IndexOutOfBoundsException bounds_exception) {
-				throw new Exception("Size exceeds byte[] store.");
-			}
-			stringArray[strIndex] = Character.toString(temp);
-			strIndex++;
-		}
-		return stringArray;
-		
-	}
 
 }
 	
