@@ -2,6 +2,7 @@ package com.bencatlin.modbusdroid;
 
 import android.util.Log;
 
+import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.code.RegisterRange;
 import com.serotonin.modbus4j.exception.ErrorResponseException;
 import com.serotonin.modbus4j.exception.IllegalFunctionException;
@@ -27,13 +28,24 @@ public class ModbusTCPMaster extends TcpMaster {
 		return initialized;
 	}
 	
-	public Object[] getValues ( ModbusMultiLocator locator ) throws ModbusTransportException, ErrorResponseException {
+	public synchronized Object[] getValues ( ModbusMultiLocator locator ) throws ModbusTransportException, ErrorResponseException {
 		int slaveId = locator.getSlaveAndRange().getSlaveId();
         int registerRange = locator.getSlaveAndRange().getRange();
         int writeOffset = locator.getOffset();
         
         int registersPerValue = locator.getLength();
-		int valueLength = locator.getRegistersLength() / registersPerValue;
+        
+        //Not sure how yet, but somehow the dataType got set to 0, so this fixes that        
+        if (registersPerValue == 0 ) {
+        	if ((registerRange == RegisterRange.COIL_STATUS) || (registerRange == RegisterRange.INPUT_STATUS) ) {
+        		locator.setDataType(DataType.BINARY);
+        	}
+        	else {
+        		locator.setDataType(DataType.TWO_BYTE_INT_UNSIGNED);
+        	}
+        }
+		
+        int valueLength = locator.getRegistersLength() / registersPerValue;
         
         byte[] data = new byte[locator.getRegistersLength()];
         Object[] values = new Object[valueLength];
@@ -70,6 +82,7 @@ public class ModbusTCPMaster extends TcpMaster {
         		request = null;
         		throw new IllegalFunctionException( (byte) registerRange );
         	}	
+        	//Not sure putting a try-catch combo here is a good idea, might be better to pass exception upstream
         	try {
         		response = (ReadResponse) send(request);
         		data = response.getData();

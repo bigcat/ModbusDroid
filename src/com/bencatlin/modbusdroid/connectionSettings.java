@@ -1,16 +1,10 @@
 package com.bencatlin.modbusdroid;
 
-import android.R.string;
-import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.EditText;
 
 public class connectionSettings extends PreferenceActivity implements OnSharedPreferenceChangeListener{
 

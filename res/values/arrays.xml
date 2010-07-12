@@ -7,4 +7,25 @@
         <item>Input Registers</item>
     </string-array>
 
+	<string-array name="dataTypeItems">
+		<item></item>
+		<item>Binary</item>
+		<item>Unsigned Integer (16bit)</item>
+		<item>Signed Integer (16bit)</item>
+		<item>Unsigned Integer (32bit)</item>
+		<item>Signed Integer (32bit)</item>
+		<item>Unsigned Int (32bit word-swapped)</item>
+		<item>Signed Int (32bit word-swapped)</item>
+		<item>Float (32bit)</item>
+		<item>Float (32bit word-swapped)</item>
+		<item>Unsigned Integer (64bit)</item>
+		<item>Signed Integer (64bit)</item>
+		<item>Unsigned Integer (64bit word-swapped)</item>
+		<item>Signed Integer (64bit word-swapped)</item>
+		<item>Float (64bit)</item>
+		<item>Float (64bit word-swapped)</item>
+		<item>BCD (16bit)</item>
+		<item>BCD (32bit)</item>
+	</string-array>
+
 </resources>

@@ -153,58 +153,6 @@ public class PollModbus implements Runnable {
 						m_ListView.updateData(modbusValues);
 					}
 				});
-				/*  //This gets to go away and is replaced by new library calls
-
-				switch (mbLocator.getSlaveAndRange().getRange()) {
-				case RegisterRange.INPUT_STATUS:
-					
-					final BitVector bv_descretes = this.readInputDiscretes(m_reference, m_count);
-					//bv_descretes.toggleAccess(true);
-					temp_string = bv_descretes.toString(); 
-					//m_ListView.SetDataFromBytes( bv_descretes.getBytes() );
-					//needs to be run in the UI thread
-					m_ListView.post( new Runnable() {
-						public void run() {
-							m_ListView.SetDataFromBitVector( bv_descretes );
-						}
-					} );
-					//m_responseData = String2StringArray(temp_string);
-					break;
-				case RegisterRange.COIL_STATUS:
-					final BitVector bv_coils = this.readCoils(m_reference, m_count);
-					temp_string = bv_coils.toString();
-					
-					//needs to run back in the UI thread
-					m_ListView.post( new Runnable() {
-						public void run() {
-							m_ListView.SetDataFromBitVector( bv_coils );
-						}
-					} );
-					
-					break;
-				case RegisterRange.INPUT_REGISTER:
-					final Register[] reg_Input = (Register[]) this.readInputRegisters(m_reference, m_count);
-					//m_ListView.SetDataFromRegisters(reg);
-					//Post to UI Thread queue
-					m_ListView.post( new Runnable() {
-						public void run() {
-							m_ListView.SetDataFromRegisters(reg_Input);
-						}
-					} );
-					
-					break;
-				case RegisterRange.HOLDING_REGISTER:
-					final Register[] reg_Holding = this.readMultipleRegisters(m_reference, m_count);
-					//m_ListView.SetDataFromRegisters(reg);
-					m_ListView.post( new Runnable() {
-						public void run() {
-							m_ListView.SetDataFromRegisters(reg_Holding);
-						}
-					} );
-					break;
-					
-				} */
-				
 				
 				//For some lame-ass reason this has to be synchronized to work right
 				if (m_polltime != 0 ) {
@@ -223,8 +171,12 @@ public class PollModbus implements Runnable {
 		/*catch (IOException IOe) {
 			
 		}*/
+		catch (NullPointerException nullException) {
+			Log.e(getClass().getSimpleName(), nullException.getMessage() );
+		}
 		catch (Exception poll_e) {
 			Log.e(getClass().getSimpleName(), poll_e.getMessage() );
+			
 			//if (m_connected) {
 				//this.disconnect();
 			//}

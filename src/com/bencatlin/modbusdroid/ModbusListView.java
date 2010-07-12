@@ -146,82 +146,10 @@ import android.widget.TextView;
     	
     	public void updateData (Object [] values ) {
     		if ( (values.getClass() != modbusResponse.getClass() ) || !(Arrays.equals(values, modbusResponse)) ) {
+    			modbusResponse = null;
     			modbusResponse = values.clone();
     			adapter.notifyDataSetChanged();
     		}
     	}
-    	
-    	/* Time to completely rework this for new library
-    	
-    	public void SetDataFromBitVector (BitVector bv) {
-    		boolean hasChanged = false;
-    		String tempString = null;
-    		
-    		Boolean LSBfirst = bv.isLSBAccess();
-    		
-    		if ( modbusResponse.size() != oldValues.size() ) {
-    			oldValues = (ArrayList<String>) modbusResponse.clone();
-    			hasChanged = true;
-    		}
-    		if (modbusResponse.size() > bv.size() ) {
-    			modbusResponse.clear();
-    			hasChanged = true;
-    		}
-    		
-    		for (int i = 0; i < bv.size(); i++ ) {
-    			if (i < modbusResponse.size() ) {
-    				
-    				modbusResponse.set(i, Boolean.toString(bv.getBit(i)) );
-    				tempString = oldValues.get(i);
-    				//tempInt = modbusResponse.get(i).compareTo(tempString);
-    				if ( modbusResponse.get(i).compareTo(tempString) != 0 ) {
-    					hasChanged = true;
-    				}
-    			}
-    			else {
-    				modbusResponse.add(Boolean.toString(bv.getBit(i) ) );
-    				hasChanged = true;
-    			}
-    		}
-    		if (hasChanged) {
-    			Log.i(getClass().getSimpleName(), "Updating Adapter Data" );
-    			oldValues = (ArrayList<String>) modbusResponse.clone();
-    			adapter.notifyDataSetChanged();
-    		}
-    	}
-    	
-    			
-    	public void SetDataFromRegisters (Register[] reg) {
-    		boolean hasChanged = false;
-    		String tempString = null;
-    		if ( modbusResponse.size() != oldValues.size() ) {
-    			oldValues = (ArrayList<String>) modbusResponse.clone();
-    			hasChanged = true;
-    		}
-    		if (modbusResponse.size() > reg.length ) {
-    			modbusResponse.clear();
-    			hasChanged = true;
-    		}
-    		
-    		for (int i = 0; i < reg.length; i++ ) {
-    			if (i < modbusResponse.size() ) {
-    				modbusResponse.set(i, Integer.toString(reg[i].getValue()) );
-    				tempString = oldValues.get(i);
-    				//tempInt = modbusResponse.get(i).compareTo(tempString);
-    				if ( modbusResponse.get(i).compareTo(tempString) != 0 ) {
-    					hasChanged = true;
-    				}
-    			}
-    			else {
-    				modbusResponse.add(Integer.toString(reg[i].getValue() ) );
-    				hasChanged = true;
-    			}
-    		}
-    		if (hasChanged) {
-    			Log.i(getClass().getSimpleName(), "Updating Adapter Data" );
-    			oldValues = (ArrayList<String>) modbusResponse.clone();
-    			adapter.notifyDataSetChanged();
-    		}
-    	} */
     	
     }

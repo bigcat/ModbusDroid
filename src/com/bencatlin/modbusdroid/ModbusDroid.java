@@ -1,19 +1,20 @@
 package com.bencatlin.modbusdroid;
 
-import java.util.Arrays;
-
 import com.serotonin.modbus4j.base.SlaveAndRange;
 import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.code.RegisterRange;
 import com.serotonin.modbus4j.ip.IpParameters;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 //import android.util.Log;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,7 +48,8 @@ public class ModbusDroid extends Activity {
 	private static final int SETTINGS = Menu.FIRST + 2;
 	private static final int CONNECT = Menu.FIRST;
 	private static final int DISCONNECT = Menu.FIRST + 1;
-	private static final int QUIT_MENU = Menu.FIRST + 3;
+	private static final int DATATYPES = Menu.FIRST + 3;
+	//
 	
 	private static final String IP_ADDRESS_PREFERENCE = "IpAddress";
 	private static final String PORT_PREFERENCE = "PortSetting";
@@ -65,16 +67,22 @@ public class ModbusDroid extends Activity {
 	private int offset;
 	private int m_count;
 	private int regType;
+	private int dataType;
 	
 	private String oldHostIPaddress = hostIPaddress;
-	private int oldPollTime = pollTime;
+	//private int oldPollTime = pollTime;
 	private int oldHostPort = hostPort;
+	private int oldDataType;
 	
 	private PollModbus mb = null;
 	private ModbusListView mbList;
+	
 	private RelativeLayout mainLayout;
 	private TextView notConnTextView;
 	private RelativeLayout.LayoutParams listParams;
+	private AlertDialog.Builder dataTypeMenuBuilder;
+	private AlertDialog dataTypeAlert;
+	private MenuItem dataTypeMenuItem;
 	
 	private SharedPreferences settings;
 	Thread mbThread = null;
@@ -93,6 +101,7 @@ public class ModbusDroid extends Activity {
 		if (settings == null) {
 			settings = PreferenceManager.getDefaultSharedPreferences(this);
 		}
+		getSharedSettings();
 		
 	}
 	
@@ -112,6 +121,7 @@ public class ModbusDroid extends Activity {
 
         //get the preferences currently stored in the SharedPreferences
         getSharedSettings();
+        oldDataType = dataType;
         
         //Handler for spinner to select modbus data type
         final Spinner s = (Spinner) findViewById(R.id.point_Type);
@@ -122,13 +132,28 @@ public class ModbusDroid extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s.setAdapter(adapter);
         
+        //Build the menu for data type display
+        dataTypeMenuBuilder = new AlertDialog.Builder(this);
+        dataTypeMenuBuilder.setTitle("Display Registers as: ");
+        dataTypeMenuBuilder.setSingleChoiceItems(R.array.dataTypeItems, -1, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                //Set datatype here
+            	oldDataType = item;
+            	setDataType(item);
+				
+				dataTypeAlert.dismiss();
+            }
+        });
+        dataTypeMenuBuilder.setCancelable(true);
+        dataTypeAlert = dataTypeMenuBuilder.create();
+        
         //Set values in UI elements according to shared preferences
         offset_editText.setText(Integer.toString(offset));
         registerLength.setText(Integer.toString(m_count));
-        s.setSelection(regType - 1);
+        s.setSelection(regType - 1);  //double-check this vs. new ints for regType
         
         //set up some dummy list data
-        modbusData = new Object[] {1};
+        modbusData = new Object[] {0};
         
         //lets get our new list
         mbList = new ModbusListView( this, modbusData );
@@ -150,13 +175,20 @@ public class ModbusDroid extends Activity {
         //mainLayout.addView(mbList, listParams);
         mainLayout.addView(notConnTextView, listParams);
         
+        switchRegType(regType);
+        
         ipParameters = new IpParameters();
         ipParameters.setHost(hostIPaddress);
         ipParameters.setPort(hostPort);
         mbFactory = new ModbusTCPFactory ();
         mbTCPMaster = mbFactory.createModbusTCPMaster(ipParameters, true);
-        mbLocator = new ModbusMultiLocator (1, regType, offset, DataType.TWO_BYTE_INT_SIGNED , m_count);
-        
+        mbTCPMaster.setTimeout(360000);
+        try {
+        	mbLocator = new ModbusMultiLocator (1, regType, offset, dataType, m_count);
+        }
+        catch (Exception e) {
+        	Log.e(getClass().getSimpleName(), e.getMessage() );
+        }
         // get a new Poll modbus object that we will pass to the thread starter
         mb = new PollModbus(mbTCPMaster, pollTime, mbLocator, mbList);  
        
@@ -167,13 +199,10 @@ public class ModbusDroid extends Activity {
         s.setOnItemSelectedListener( new OnItemSelectedListener() {
         		public void onItemSelected ( AdapterView<?> parent, View view, int pos, long id) {
     					regType = s.getSelectedItemPosition() + 1;        				
-        				mbLocator.setSlaveAndRange(new SlaveAndRange (1, regType));
+        				//mbLocator.setSlaveAndRange(new SlaveAndRange (1, regType));
         				
         				switchRegType(regType);
         				
-        				SharedPreferences.Editor editor = settings.edit();
-        				editor.putInt("registerType", regType);
-        				editor.commit();
         		    }
         		public void onNothingSelected(AdapterView parent) {
         		      // Do nothing.
@@ -189,13 +218,12 @@ public class ModbusDroid extends Activity {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
                 	offset = Integer.parseInt(offset_editText.getText().toString());
                 	mbLocator.setOffset(offset);
-                	//mb.setReference(offset);
                 	
                 	SharedPreferences.Editor editor = settings.edit();
     				editor.putInt("registerOffset", offset);
     				editor.commit();
     				
-                	switchRegType(regType);
+    				switchRegType(regType);
                 	
                 	//Hide the keyboard
                 	InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
@@ -216,7 +244,6 @@ public class ModbusDroid extends Activity {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                 	offset = Integer.parseInt(offset_editText.getText().toString());
                 	mbLocator.setOffset(offset);
-                	//mb.setReference(offset);
                 	
                 	SharedPreferences.Editor editor = settings.edit();
     				editor.putInt("registerOffset", offset);
@@ -292,9 +319,11 @@ public class ModbusDroid extends Activity {
         menu.add(0, CONNECT, 0, "Connect");
         menu.add(0, DISCONNECT, 0, "Disconnect");
         menu.add(0, SETTINGS, 0, "Settings").setIcon(android.R.drawable.ic_menu_preferences);
-        menu.add(0, QUIT_MENU, 0, "Quit").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+        dataTypeMenuItem = menu.add(0, DATATYPES, 0, "Data Display").setIcon(android.R.drawable.ic_input_get);
+        setDataType(dataType);
         return true;
     }
+    
 
     /* Handles item selections */
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -331,9 +360,11 @@ public class ModbusDroid extends Activity {
         		Toast.makeText(this, "Connected!!!!", 5).show();
         	}
         	
-        	mainLayout.removeView(notConnTextView);
-        	mainLayout.addView(mbList, listParams);
-        	//showView(mbList);
+        	if ( notConnTextView.isShown() ) {
+        		mainLayout.removeView(notConnTextView);
+        		mainLayout.addView(mbList, listParams);
+        		//showView(mbList);
+        	}
         	
         	return true;
         	
@@ -347,13 +378,16 @@ public class ModbusDroid extends Activity {
         		Toast.makeText(this, "Disconnected from " + hostIPaddress, 10).show();
         	}
         	
-        	mainLayout.removeView(mbList);
-        	mainLayout.addView(notConnTextView);
-        	//hideView(mbList);
+        	if ( mbList.isShown() ) {
+        		mainLayout.removeView(mbList);
+        		mainLayout.addView(notConnTextView);
+        		//hideView(mbList);
+        	}
         	
         	return true;
-        case QUIT_MENU:
-            finish();
+        case DATATYPES:
+            dataTypeAlert.show();
+        	
             return true;
         }
         return false;
@@ -396,11 +430,11 @@ public class ModbusDroid extends Activity {
     
     }
     
+    //
     /*
-     * 
      * Helper functions
-     * 
      */
+    //
     
     /**
      * Gets settings from the Shared Preferences, and sets local variables
@@ -411,32 +445,83 @@ public class ModbusDroid extends Activity {
         pollTime = Integer.parseInt(settings.getString(POLL_TIME_PREFERENCE, "500"));
         
         m_count = settings.getInt("registerCount", 1);
-        
         offset = settings.getInt("registerOffset", 0);
-        
         regType = settings.getInt("registerType", 0);
+        dataType = settings.getInt("dataType", 1);
+        //switchRegType(regType);
         
     } //getSharedSettings
     
     /**
      * 
      */
+    public void setDataType (int dataType ) {
+    	// We need to check first if this dataType is valid for the register range
+    	if ( (regType != RegisterRange.COIL_STATUS) && 
+    			(regType != RegisterRange.INPUT_STATUS) ) {
+    		this.dataType = dataType;
+    		if (dataTypeMenuItem != null ) {
+    			dataTypeMenuItem.setEnabled(true);
+    		}
+    	}
+    	else {
+    		this.dataType = DataType.BINARY;
+    		if (dataTypeMenuItem != null ) {
+    			dataTypeMenuItem.setEnabled(false); 	
+    		}
+    	}
+    	if (mbLocator != null) {
+    		mbLocator.setDataType(this.dataType);
+    	}
+    	
+    	SharedPreferences.Editor editor = settings.edit();
+		editor.putInt("dataType", dataType);
+		editor.commit();
+    	
+    }
+    
+    
+    /**
+     * 
+     */
     public void switchRegType (int regType) {
+    	
+    	this.regType = regType;
     	
     	switch (regType) {
     	
     	case RegisterRange.COIL_STATUS:
     		mbList.setStartAddress(1000 + offset);
+    		//if (dataType != DataType.BINARY) {
+    			oldDataType = dataType;
+        		setDataType(DataType.BINARY);
+    		//}
     		break;
     	case RegisterRange.INPUT_STATUS:
     		mbList.setStartAddress(0000 + offset);
+    		//if (dataType != DataType.BINARY) {
+    			oldDataType = dataType;
+        		setDataType(DataType.BINARY);
+    		//}
     		break;
     	case RegisterRange.HOLDING_REGISTER:
     		mbList.setStartAddress(4000 + offset);
+    		setDataType(dataType);
     		break;
     	case RegisterRange.INPUT_REGISTER:
-    		mbList.setStartAddress(3000 + offset);	
+    		mbList.setStartAddress(3000 + offset);
+    		setDataType(dataType);
     	}
+    	
+    	if (mbLocator != null ) {
+        	mbLocator.setSlaveAndRange(new SlaveAndRange(1, regType) );    		
+    	}
+
+    	
+    	SharedPreferences.Editor editor = settings.edit();
+		editor.putInt("registerType", regType);
+		editor.commit();
+    	
     }
     
     

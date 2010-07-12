@@ -2,9 +2,7 @@ package com.bencatlin.modbusdroid;
 
 
 import com.serotonin.modbus4j.ModbusFactory;
-import com.serotonin.modbus4j.ModbusMaster;
 import com.serotonin.modbus4j.ip.IpParameters;
-import com.serotonin.modbus4j.ip.tcp.TcpMaster;
 
 
 

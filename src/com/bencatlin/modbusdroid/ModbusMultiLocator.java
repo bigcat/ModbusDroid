@@ -36,21 +36,21 @@ public class ModbusMultiLocator extends ModbusLocator {
     /*
      * 
      */
-    public void setDataType (int dataType ) {
+    public synchronized void setDataType (int dataType ) {
     	this.dataType = dataType;
     }
     
     /*
      * 
      */
-    public void setOffset ( int offset ) {
+    public synchronized void setOffset ( int offset ) {
     	this.offset = offset;
     }
     
     /*
      * 
      */
-    public void setSlaveAndRange (SlaveAndRange slaveAndRange ) {
+    public synchronized void setSlaveAndRange (SlaveAndRange slaveAndRange ) {
     	this.slaveAndRange = slaveAndRange;
     	//this.setDataType(slaveAndRange.getRange());
     }
@@ -58,7 +58,7 @@ public class ModbusMultiLocator extends ModbusLocator {
     /*
      * 
      */
-	public void setRegistersLength(int registersLength) {
+	public synchronized void setRegistersLength(int registersLength) {
 		this.registersLength = registersLength;
 	}
 
@@ -69,7 +69,7 @@ public class ModbusMultiLocator extends ModbusLocator {
     /*  Come back to this later
      * 
      */
-	public Object[] bytesToValueArray ( byte[] bytes ) {
+	public synchronized Object[] bytesToValueArray ( byte[] bytes ) {
 		int registersPerValue = this.getLength();
 		int valueLength = registersLength / registersPerValue;
 		
@@ -82,7 +82,7 @@ public class ModbusMultiLocator extends ModbusLocator {
 			System.arraycopy(bytes, ((registersPerValue *2)*i), 
 					temp, 0, (registersPerValue * 2));
 			
-			values[i] = this.bytesToValue(temp, 0);
+			values[i] = this.bytesToValue(temp, offset);
 			
 		}
 		

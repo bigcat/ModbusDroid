@@ -9,6 +9,7 @@ package com.bencatlin.modbusdroid;
 
 public final class R {
     public static final class array {
+        public static final int dataTypeItems=0x7f050001;
         public static final int pointTypes=0x7f050000;
     }
     public static final class attr {
