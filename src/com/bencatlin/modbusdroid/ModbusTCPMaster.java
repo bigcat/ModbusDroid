@@ -29,9 +29,9 @@ public class ModbusTCPMaster extends TcpMaster {
 	}
 	
 	public synchronized Object[] getValues ( ModbusMultiLocator locator ) throws ModbusTransportException, ErrorResponseException {
-		int slaveId = locator.getSlaveAndRange().getSlaveId();
+		//int slaveId = locator.getSlaveAndRange().getSlaveId();
         int registerRange = locator.getSlaveAndRange().getRange();
-        int writeOffset = locator.getOffset();
+        //int writeOffset = locator.getOffset();
         
         int registersPerValue = locator.getLength();
         
@@ -84,12 +84,14 @@ public class ModbusTCPMaster extends TcpMaster {
         	}	
         	//Not sure putting a try-catch combo here is a good idea, might be better to pass exception upstream
         	try {
+        		Log.i(getClass().getSimpleName(), "Sending request: " + request.getFunctionCode());
         		response = (ReadResponse) send(request);
         		data = response.getData();
+        		//Log.i(getClass().getSimpleName(), "Returned data: " + data.toString() );
         		values = locator.bytesToValueArray(data);
         	}
         	catch ( Exception e ) {
-        		Log.i(getClass().getSimpleName(), e.getMessage() );
+        		Log.e(getClass().getSimpleName(), e.getMessage() );
         	}
         }
 		

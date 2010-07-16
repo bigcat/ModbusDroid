@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.util.Log;
+
 import com.serotonin.io.messaging.SenderConnection;
 import com.serotonin.modbus4j.base.KeyedModbusLocator;
 import com.serotonin.modbus4j.base.RangeAndOffset;
@@ -233,6 +235,7 @@ abstract public class ModbusMaster extends Modbus {
         }
         catch (ModbusTransportException e) {
             // ignore
+        	Log.i(getClass().getSimpleName(), "Got a ModbusTransportException in the testSlaveNode method: " + e.getMessage() );
         }
         return false;
     }
@@ -282,6 +285,7 @@ abstract public class ModbusMaster extends Modbus {
     ///
     //
     protected SenderConnection getSenderConnection() {
+    	Log.i(getClass().getSimpleName(), "Getting a new SenderConnection from that closed source part of the library." );
         SenderConnection conn = new SenderConnection();
         conn.setRetries(getRetries());
         conn.setTimeout(getTimeout());
@@ -290,10 +294,10 @@ abstract public class ModbusMaster extends Modbus {
     }
     
     protected void closeSenderConnection(SenderConnection conn) {
-        if (conn != null)
+    	Log.i(getClass().getSimpleName(), "Close the SenderConnection" );
+    	if (conn != null)
             conn.close();
     }
-    
     
     
     //

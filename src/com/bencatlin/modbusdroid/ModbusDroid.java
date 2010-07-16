@@ -84,6 +84,8 @@ public class ModbusDroid extends Activity {
 	private AlertDialog dataTypeAlert;
 	private MenuItem dataTypeMenuItem;
 	
+	private MbDroidMsgExceptionHandler exceptionHandler;
+	
 	private SharedPreferences settings;
 	Thread mbThread = null;
 	
@@ -135,7 +137,7 @@ public class ModbusDroid extends Activity {
         //Build the menu for data type display
         dataTypeMenuBuilder = new AlertDialog.Builder(this);
         dataTypeMenuBuilder.setTitle("Display Registers as: ");
-        dataTypeMenuBuilder.setSingleChoiceItems(R.array.dataTypeItems, -1, new DialogInterface.OnClickListener() {
+        dataTypeMenuBuilder.setSingleChoiceItems(R.array.dataTypeItems, dataType, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 //Set datatype here
             	oldDataType = item;
@@ -182,7 +184,10 @@ public class ModbusDroid extends Activity {
         ipParameters.setPort(hostPort);
         mbFactory = new ModbusTCPFactory ();
         mbTCPMaster = mbFactory.createModbusTCPMaster(ipParameters, true);
-        mbTCPMaster.setTimeout(360000);
+        exceptionHandler = new MbDroidMsgExceptionHandler();
+        mbTCPMaster.setTimeout(30000);
+        mbTCPMaster.setExceptionListener(exceptionHandler);
+        
         try {
         	mbLocator = new ModbusMultiLocator (1, regType, offset, dataType, m_count);
         }

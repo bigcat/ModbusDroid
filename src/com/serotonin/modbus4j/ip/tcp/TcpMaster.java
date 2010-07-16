@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import android.util.Log;
+
 import com.serotonin.io.messaging.SenderConnection;
 import com.serotonin.io.messaging.StreamTransport;
 import com.serotonin.modbus4j.ModbusMaster;
@@ -64,6 +66,7 @@ public class TcpMaster extends ModbusMaster {
                 openConnection();
         }
         catch (Exception e) {
+        	Log.e(getClass().getSimpleName(), e.getMessage());
             closeConnection();
             throw new ModbusTransportException(e);
         }            
@@ -73,30 +76,40 @@ public class TcpMaster extends ModbusMaster {
         
         // Send the request to get the response.
         IpMessageResponse ipResponse;
+        
         try {
+        	Log.i(getClass().getSimpleName(), "Trying to send an ipRequest over open connection");
             ipResponse = (IpMessageResponse)conn.send(ipRequest);
+            Log.i(getClass().getSimpleName(), "Got response!");
             return ipResponse.getModbusResponse();
         }
         catch (Exception e) {
-            if (keepAlive) {
+        	Log.e(getClass().getSimpleName(), e.getMessage());
+        	if (keepAlive) {
                 // The connection may have been reset, so try to reopen it and attempt the message again.
-                try {
+            	try {
                     System.out.println("Modbus4J: Keep-alive connection may have been reset. Attempting to re-open.");
+                    Log.i(getClass().getSimpleName(), "Keep-alive connection may have been reset. Trying to re-open it.");
                     openConnection();
+                    Log.i(getClass().getSimpleName(), "Trying to send an ipRequest over open connection");
                     ipResponse = (IpMessageResponse)conn.send(ipRequest);
+                    Log.i(getClass().getSimpleName(), "Got response: " + ipResponse.getMessageData().toString());
                     return ipResponse.getModbusResponse();
                 }
                 catch (Exception e2) {
+                	Log.e(getClass().getSimpleName(), e2.getMessage());
                     throw new ModbusTransportException(e2);
                 }
             }
-            
+        	Log.e(getClass().getSimpleName(), "Throwing a new exception upwards");
             throw new ModbusTransportException(e);
         }
         finally {
             // Check if we should close the connection.
-            if (!keepAlive)
+            if (!keepAlive) {
                 closeConnection();
+                Log.i(getClass().getSimpleName(), "Closing connection because keepalive is false" );
+            }
         }
     }
     
@@ -108,21 +121,25 @@ public class TcpMaster extends ModbusMaster {
     //
     private void openConnection() throws IOException {
         // Make sure any existing connection is closed.
+    	Log.i(getClass().getSimpleName(), "Making Sure connection is closed before trying to open a new one." );
         closeConnection();
         
         // Try 'retries' times to get the socket open.
         int retries = getRetries();
         while (true) {
             try {
+            	Log.i(getClass().getSimpleName(), "Create a new socket object" );
                 socket = new Socket();
+                Log.i(getClass().getSimpleName(), "Connect the socket to " + ipParameters.getHost() + " with a timeoute of " + getTimeout() );
                 socket.connect(new InetSocketAddress(ipParameters.getHost(), ipParameters.getPort()), getTimeout());
+                Log.i(getClass().getSimpleName(), "Create a new transport Stream" );
                 transport = new StreamTransport(socket.getInputStream(), socket.getOutputStream(),
                         "Modbus4J TcpMaster");
                 break;
             }
             catch (IOException e) {
                 closeConnection();
-                
+                Log.e(getClass().getSimpleName(), e.getMessage() );
                 if (retries <= 0)
                     throw e;
                 System.out.println("Modbus4J: Open connection failed, trying again.");
@@ -131,6 +148,7 @@ public class TcpMaster extends ModbusMaster {
         }
         
         conn = getSenderConnection();
+        Log.i(getClass().getSimpleName(), "Starting " );
         conn.start(transport, ipMessageParser);
     }
     

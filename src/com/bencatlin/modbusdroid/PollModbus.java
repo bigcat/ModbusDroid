@@ -2,6 +2,7 @@ package com.bencatlin.modbusdroid;
 
 
 import com.serotonin.modbus4j.code.RegisterRange;
+import com.serotonin.modbus4j.exception.ModbusInitException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 
 import android.util.Log;
@@ -77,13 +78,17 @@ public class PollModbus implements Runnable {
 	/**
 	 * Connects to server and starts polling thread
 	 */
-	public void connect() throws Exception {
+	public synchronized void connect() throws Exception {
 		if (this.isConnected()) {
 			this.disconnect();
 		}
 		try {
 			mbTCPMaster.init();
 			
+		}
+		catch (ModbusInitException initException) {
+			Log.e(getClass().getSimpleName(), initException.getMessage() );
+			m_connected = false;
 		}
 		catch (Exception e) {
 			Log.e(getClass().getSimpleName(), e.getMessage() );
@@ -98,9 +103,12 @@ public class PollModbus implements Runnable {
 	 *  Disconnects from server, and sets connected bit to false
 	 *  This will cause the thread to complete that is doing the polling
 	 */
-	public void disconnect() {
-		if (m_connected || mbTCPMaster.isInitialized() )
+	public synchronized void disconnect() {
+		if (m_connected || mbTCPMaster.isInitialized() ) {
+			Log.i(getClass().getSimpleName(), "Try to destroy connection");	
 			mbTCPMaster.destroy();
+		}
+		Log.i(getClass().getSimpleName(), "Destroyed connection or it wasn't there" );
 		m_connected = false;
 	}
 	
@@ -108,7 +116,7 @@ public class PollModbus implements Runnable {
 	 * returns connection status.
 	 * 
 	 */
-	public boolean isConnected() {
+	public synchronized boolean isConnected() {
 		
 		if ( mbTCPMaster.isInitialized() )
 			m_connected = true;
@@ -132,14 +140,12 @@ public class PollModbus implements Runnable {
 			}
 			catch (RuntimeException runtime_e)
 			{
-				String errormsg = runtime_e.getMessage();
-				Log.i(getClass().getSimpleName(), runtime_e.getMessage() );
+				Log.e(getClass().getSimpleName(), runtime_e.getMessage() );
 				//Need a way to get a debug message here
 			}
 			catch (Exception connect_e)
 			{	
-				String errormsg = connect_e.getMessage();
-				Log.i(getClass().getSimpleName(), connect_e.getMessage() );
+				Log.e(getClass().getSimpleName(), connect_e.getMessage() );
 			//Need a way to get a debug message here too
 			}
 		}
@@ -186,5 +192,3 @@ public class PollModbus implements Runnable {
 	
 
 }
-	
-
