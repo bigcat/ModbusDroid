@@ -80,7 +80,7 @@ public class TcpMaster extends ModbusMaster {
         try {
         	Log.i(getClass().getSimpleName(), "Trying to send an ipRequest over open connection");
             ipResponse = (IpMessageResponse)conn.send(ipRequest);
-            Log.i(getClass().getSimpleName(), "Got response!");
+            //Log.i(getClass().getSimpleName(), "Got response!");
             return ipResponse.getModbusResponse();
         }
         catch (Exception e) {
@@ -121,18 +121,14 @@ public class TcpMaster extends ModbusMaster {
     //
     private void openConnection() throws IOException {
         // Make sure any existing connection is closed.
-    	Log.i(getClass().getSimpleName(), "Making Sure connection is closed before trying to open a new one." );
         closeConnection();
         
         // Try 'retries' times to get the socket open.
         int retries = getRetries();
         while (true) {
             try {
-            	Log.i(getClass().getSimpleName(), "Create a new socket object" );
                 socket = new Socket();
-                Log.i(getClass().getSimpleName(), "Connect the socket to " + ipParameters.getHost() + " with a timeoute of " + getTimeout() );
                 socket.connect(new InetSocketAddress(ipParameters.getHost(), ipParameters.getPort()), getTimeout());
-                Log.i(getClass().getSimpleName(), "Create a new transport Stream" );
                 transport = new StreamTransport(socket.getInputStream(), socket.getOutputStream(),
                         "Modbus4J TcpMaster");
                 break;
@@ -148,7 +144,7 @@ public class TcpMaster extends ModbusMaster {
         }
         
         conn = getSenderConnection();
-        Log.i(getClass().getSimpleName(), "Starting " );
+        //conn.DEBUG = true;
         conn.start(transport, ipMessageParser);
     }
     

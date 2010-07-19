@@ -133,6 +133,9 @@ public class PollModbus implements Runnable {
 	
 	public void run () {
 		modbusValues = null;
+		long errorCount = 0;
+		long startTime;
+		long elapsedTime;
 		
 		if (!this.isConnected()) {
 			try {
@@ -151,9 +154,19 @@ public class PollModbus implements Runnable {
 		}
 		try {
 			while (m_connected) {
-				
+				//get start time for modbus query
+				startTime = System.nanoTime();
+				//send query, and turn response into decent values that we can use
 				modbusValues = mbTCPMaster.getValues(mbLocator);
+				//measure how long we waited for a response
+				elapsedTime = (System.nanoTime() - startTime)/1000000; 
+				if (elapsedTime > ( m_polltime*1.5 ) ) {
+					errorCount++;
+					Log.e(getClass().getSimpleName(), "Waited too long for response!");
+				}	
+				Log.i(getClass().getSimpleName(), "Total Error Count: " + errorCount);
 				
+				//Call back to the UI thread to update the listview
 				m_ListView.post( new Runnable() {
 					public void run() {
 						m_ListView.updateData(modbusValues);
