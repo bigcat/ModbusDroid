@@ -1,6 +1,5 @@
 package com.bencatlin.modbusdroid;
 
-import com.serotonin.messaging.MessagingExceptionHandler;
 import com.serotonin.modbus4j.base.SlaveAndRange;
 import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.code.RegisterRange;

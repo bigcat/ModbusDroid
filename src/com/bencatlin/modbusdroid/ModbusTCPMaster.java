@@ -87,7 +87,7 @@ public class ModbusTCPMaster extends TcpMaster {
         		//Log.i(getClass().getSimpleName(), "Sending request: ");
         		response = (ReadResponse) send(request);
         		data = response.getData();
-        		Log.i(getClass().getSimpleName(), "Returned data (first byte): " + Byte.toString(data[0]) );
+        		//Log.i(getClass().getSimpleName(), "Returned data (first byte): " + Byte.toString(data[0]) );
         		values = locator.bytesToValueArray(data);
         	}
         	catch ( Exception e ) {
