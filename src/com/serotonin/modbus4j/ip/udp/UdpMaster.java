@@ -20,16 +20,14 @@ import com.serotonin.util.queue.ByteQueue;
 
 public class UdpMaster extends ModbusMaster {
     private static final int MESSAGE_LENGTH = 1024;
-    
+
     private short nextTransactionId = 0;
     private final IpParameters ipParameters;
 
     // Runtime fields.
     private IpMessageParser messageParser;
     private DatagramSocket socket;
-//  private Transport transport;
-//  private SenderConnection conn;
-//
+
     public UdpMaster(IpParameters params) {
         ipParameters = params;
     }
@@ -37,10 +35,10 @@ public class UdpMaster extends ModbusMaster {
     protected short getNextTransactionId() {
         return nextTransactionId++;
     }
-    
+
     @Override
     public void init() throws ModbusInitException {
-        messageParser = new IpMessageParser();
+        messageParser = new IpMessageParser(true);
         try {
             socket = new DatagramSocket();
             socket.setSoTimeout(getTimeout());
@@ -50,25 +48,28 @@ public class UdpMaster extends ModbusMaster {
         }
         initialized = true;
     }
-    
+
     @Override
     public void destroy() {
         socket.close();
     }
-    
+
     @Override
     public ModbusResponse send(ModbusRequest request) throws ModbusTransportException {
         // Wrap the modbus request in an ip request.
         IpMessageRequest ipRequest = new IpMessageRequest(request, getNextTransactionId());
         IpMessageResponse ipResponse;
-        
+
         try {
             int attempts = getRetries() + 1;
-            
+
             while (true) {
                 // Send the request.
                 sendImpl(ipRequest);
-                
+
+                if (!ipRequest.expectsResponse())
+                    return null;
+
                 // Recieve the response.
                 try {
                     ipResponse = receiveImpl();
@@ -78,47 +79,47 @@ public class UdpMaster extends ModbusMaster {
                     if (attempts > 0)
                         // Try again.
                         continue;
-                    
-                    throw new ModbusTransportException(e);
+
+                    throw new ModbusTransportException(e, request.getSlaveId());
                 }
-                
+
                 // We got the response
                 break;
             }
-            
+
             return ipResponse.getModbusResponse();
         }
         catch (IOException e) {
-            throw new ModbusTransportException(e);
+            throw new ModbusTransportException(e, request.getSlaveId());
         }
     }
-    
+
     private void sendImpl(IpMessageRequest request) throws IOException {
         byte[] data = request.getMessageData();
-        DatagramPacket packet = new DatagramPacket(data, data.length,
-                InetAddress.getByName(ipParameters.getHost()), ipParameters.getPort());
+        DatagramPacket packet = new DatagramPacket(data, data.length, InetAddress.getByName(ipParameters.getHost()),
+                ipParameters.getPort());
         socket.send(packet);
     }
-    
+
     private IpMessageResponse receiveImpl() throws IOException, ModbusTransportException {
         DatagramPacket packet = new DatagramPacket(new byte[MESSAGE_LENGTH], MESSAGE_LENGTH);
         socket.receive(packet);
-        
+
         // We could verify that the packet was received from the same address to which the request was sent,
         // but let's not bother with that yet.
-        
+
         ByteQueue queue = new ByteQueue(packet.getData(), 0, packet.getLength());
         IpMessageResponse response;
         try {
-            response = (IpMessageResponse)messageParser.parseResponse(queue);
+            response = (IpMessageResponse) messageParser.parseMessage(queue);
         }
         catch (Exception e) {
             throw new ModbusTransportException(e);
         }
-        
+
         if (response == null)
             throw new ModbusTransportException("Invalid response received");
-        
+
         return response;
     }
 }

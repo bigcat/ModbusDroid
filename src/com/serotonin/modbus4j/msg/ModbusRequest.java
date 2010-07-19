@@ -3,7 +3,6 @@
  */
 package com.serotonin.modbus4j.msg;
 
-import com.serotonin.io.messaging.MessageMismatchException;
 import com.serotonin.modbus4j.ProcessImage;
 import com.serotonin.modbus4j.base.ModbusUtils;
 import com.serotonin.modbus4j.code.ExceptionCode;
@@ -16,7 +15,7 @@ abstract public class ModbusRequest extends ModbusMessage {
     public static ModbusRequest createModbusRequest(ByteQueue queue) throws ModbusTransportException {
         int slaveId = ModbusUtils.popUnsignedByte(queue);
         byte functionCode = queue.pop();
-        
+
         ModbusRequest request = null;
         if (functionCode == FunctionCode.READ_COILS)
             request = new ReadCoilsRequest(slaveId);
@@ -38,33 +37,20 @@ abstract public class ModbusRequest extends ModbusMessage {
             request = new WriteRegistersRequest(slaveId);
         else if (functionCode == FunctionCode.REPORT_SLAVE_ID)
             request = new ReportSlaveIdRequest(slaveId);
-//        else if (functionCode == FunctionCode.WRITE_MASK_REGISTER)
-//            request = new WriteMaskRegisterRequest(slaveId);
+        // else if (functionCode == FunctionCode.WRITE_MASK_REGISTER)
+        // request = new WriteMaskRegisterRequest(slaveId);
         else
             request = new ExceptionRequest(slaveId, functionCode, ExceptionCode.ILLEGAL_FUNCTION);
-        
+
         request.readRequest(queue);
-        
+
         return request;
     }
-    
+
     ModbusRequest(int slaveId) throws ModbusTransportException {
         super(slaveId);
     }
-    
-    final public void matches(ModbusResponse response) throws MessageMismatchException {
-        if (slaveId != response.getSlaveId())
-            throw new MessageMismatchException("Incorrect slave id: received "+ 
-                    response.getSlaveId() +", should be "+ slaveId);
-        
-        if (getFunctionCode() != response.getFunctionCode())
-            throw new MessageMismatchException("Incorrect function code: received "+ 
-                    response.getFunctionCode() +", should be "+ getFunctionCode());
-        
-        matchesImpl(response);
-    }
-    abstract protected void matchesImpl(ModbusResponse response) throws MessageMismatchException;
-    
+
     public ModbusResponse handle(ProcessImage processImage) throws ModbusTransportException {
         try {
             try {
@@ -78,20 +64,24 @@ abstract public class ModbusRequest extends ModbusMessage {
             return handleException(ExceptionCode.SLAVE_DEVICE_FAILURE);
         }
     }
+
     abstract ModbusResponse handleImpl(ProcessImage processImage) throws ModbusTransportException;
+
     abstract protected void readRequest(ByteQueue queue);
-    
+
     ModbusResponse handleException(byte exceptionCode) throws ModbusTransportException {
         ModbusResponse response = getResponseInstance(slaveId);
         response.setException(exceptionCode);
         return response;
     }
+
     abstract ModbusResponse getResponseInstance(int slaveId) throws ModbusTransportException;
-    
+
     @Override
     final protected void writeImpl(ByteQueue queue) {
         queue.push(getFunctionCode());
         writeRequest(queue);
     }
+
     abstract protected void writeRequest(ByteQueue queue);
 }

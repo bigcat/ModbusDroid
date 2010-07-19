@@ -8,16 +8,16 @@ import com.serotonin.util.queue.ByteQueue;
 public class WriteCoilResponse extends ModbusResponse {
     private int writeOffset;
     private boolean writeValue;
-    
+
     @Override
     public byte getFunctionCode() {
         return FunctionCode.WRITE_COIL;
     }
-    
+
     WriteCoilResponse(int slaveId) throws ModbusTransportException {
         super(slaveId);
     }
-    
+
     WriteCoilResponse(int slaveId, int writeOffset, boolean writeValue) throws ModbusTransportException {
         super(slaveId);
         this.writeOffset = writeOffset;
@@ -34,5 +34,13 @@ public class WriteCoilResponse extends ModbusResponse {
     protected void readResponse(ByteQueue queue) {
         writeOffset = ModbusUtils.popUnsignedShort(queue);
         writeValue = ModbusUtils.popUnsignedShort(queue) == 0xff00;
+    }
+
+    public int getWriteOffset() {
+        return writeOffset;
+    }
+
+    public boolean isWriteValue() {
+        return writeValue;
     }
 }

@@ -1,25 +1,23 @@
 package com.serotonin.modbus4j.ip;
 
-import com.serotonin.io.messaging.MessageRequest;
-import com.serotonin.io.messaging.MessageResponse;
-import com.serotonin.modbus4j.ProcessImage;
+import com.serotonin.messaging.IncomingRequestMessage;
+import com.serotonin.messaging.OutgoingResponseMessage;
+import com.serotonin.modbus4j.ModbusSlaveSet;
 import com.serotonin.modbus4j.base.BaseRequestHandler;
 import com.serotonin.modbus4j.msg.ModbusRequest;
 import com.serotonin.modbus4j.msg.ModbusResponse;
 
 public class IpRequestHandler extends BaseRequestHandler {
-    public IpRequestHandler(int slaveId, ProcessImage processImage) {
-        super(slaveId, processImage);
+    public IpRequestHandler(ModbusSlaveSet slave) {
+        super(slave);
     }
-    
-    public MessageResponse handleRequest(MessageRequest req) throws Exception {
-        IpMessageRequest tcpRequest = (IpMessageRequest)req;
+
+    public OutgoingResponseMessage handleRequest(IncomingRequestMessage req) throws Exception {
+        IpMessageRequest tcpRequest = (IpMessageRequest) req;
         ModbusRequest request = tcpRequest.getModbusRequest();
-        
-        if (!checkSlaveId(request))
+        ModbusResponse response = handleRequestImpl(request);
+        if (response == null)
             return null;
-            
-        ModbusResponse response = request.handle(processImage);
         return new IpMessageResponse(response, tcpRequest.transactionId);
     }
 }

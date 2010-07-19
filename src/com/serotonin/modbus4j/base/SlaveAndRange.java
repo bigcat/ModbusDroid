@@ -3,17 +3,18 @@ package com.serotonin.modbus4j.base;
 public class SlaveAndRange {
     private final int slaveId;
     private final int range;
-    
+
     public SlaveAndRange(int slaveId, int range) {
-        ModbusUtils.validateSlaveId(slaveId);
-        
+        ModbusUtils.validateSlaveId(slaveId, true);
+
         this.slaveId = slaveId;
         this.range = range;
     }
-    
+
     public int getRange() {
         return range;
     }
+
     public int getSlaveId() {
         return slaveId;
     }

@@ -1,5 +1,6 @@
 package com.bencatlin.modbusdroid;
 
+import com.serotonin.messaging.MessagingExceptionHandler;
 import com.serotonin.modbus4j.base.SlaveAndRange;
 import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.code.RegisterRange;
@@ -186,7 +187,7 @@ public class ModbusDroid extends Activity {
         mbTCPMaster = mbFactory.createModbusTCPMaster(ipParameters, true);
         exceptionHandler = new MbDroidMsgExceptionHandler();
         mbTCPMaster.setTimeout(30000);
-        mbTCPMaster.setExceptionListener(exceptionHandler);
+        mbTCPMaster.setExceptionHandler(exceptionHandler);
         
         try {
         	mbLocator = new ModbusMultiLocator (1, regType, offset, dataType, m_count);

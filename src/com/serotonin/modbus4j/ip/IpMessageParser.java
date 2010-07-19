@@ -1,20 +1,18 @@
 package com.serotonin.modbus4j.ip;
 
-import android.util.Log;
-
-import com.serotonin.io.messaging.MessageRequest;
-import com.serotonin.io.messaging.MessageResponse;
+import com.serotonin.messaging.IncomingMessage;
 import com.serotonin.modbus4j.base.BaseMessageParser;
 import com.serotonin.util.queue.ByteQueue;
 
 public class IpMessageParser extends BaseMessageParser {
-    protected MessageResponse parseResponseImpl(ByteQueue queue) throws Exception {
-    	Log.i(getClass().getSimpleName(), "Parsing Response");
-        return IpMessageResponse.createIpMessageResponse(queue);
+    public IpMessageParser(boolean master) {
+        super(master);
     }
 
-    protected MessageRequest parseRequestImpl(ByteQueue queue) throws Exception {
-    	Log.i(getClass().getSimpleName(), "Parsing Response");
+    @Override
+    protected IncomingMessage parseMessageImpl(ByteQueue queue) throws Exception {
+        if (master)
+            return IpMessageResponse.createIpMessageResponse(queue);
         return IpMessageRequest.createIpMessageRequest(queue);
     }
 }

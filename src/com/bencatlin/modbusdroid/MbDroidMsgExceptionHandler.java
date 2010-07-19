@@ -2,10 +2,10 @@ package com.bencatlin.modbusdroid;
 
 import android.util.Log;
 
-import com.serotonin.io.messaging.MessagingConnectionListener;
+import com.serotonin.messaging.MessagingExceptionHandler;
 
 
-public class MbDroidMsgExceptionHandler implements MessagingConnectionListener {
+public class MbDroidMsgExceptionHandler implements MessagingExceptionHandler {
 
 	public void receivedException(Exception genericException) {
 		// TODO Auto-generated method stub

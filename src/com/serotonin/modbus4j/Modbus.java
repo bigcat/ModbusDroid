@@ -1,27 +1,26 @@
 package com.serotonin.modbus4j;
 
-import com.serotonin.io.messaging.DefaultExceptionListener;
-import com.serotonin.io.messaging.MessagingConnectionListener;
+import com.serotonin.messaging.DefaultMessagingExceptionHandler;
+import com.serotonin.messaging.MessagingExceptionHandler;
 
 /**
  * Base level for masters and slaves/listeners
  * 
- * TODO:
- * - handle echoing in RS485
+ * TODO: - handle echoing in RS485
  * 
  * @author mlohbihler
  */
 public class Modbus {
-    private MessagingConnectionListener exceptionListener = new DefaultExceptionListener();
+    private MessagingExceptionHandler exceptionHandler = new DefaultMessagingExceptionHandler();
 
-    public void setExceptionListener(MessagingConnectionListener exceptionListener) {
-        if (exceptionListener == null)
-            this.exceptionListener = new DefaultExceptionListener();
+    public void setExceptionHandler(MessagingExceptionHandler exceptionHandler) {
+        if (exceptionHandler == null)
+            this.exceptionHandler = new DefaultMessagingExceptionHandler();
         else
-            this.exceptionListener = exceptionListener;
+            this.exceptionHandler = exceptionHandler;
     }
-    
-    public MessagingConnectionListener getExceptionListener() {
-        return exceptionListener;
+
+    public MessagingExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
     }
 }

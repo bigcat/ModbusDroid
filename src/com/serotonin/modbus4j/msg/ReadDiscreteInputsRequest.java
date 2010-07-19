@@ -1,6 +1,5 @@
 package com.serotonin.modbus4j.msg;
 
-import com.serotonin.io.messaging.MessageMismatchException;
 import com.serotonin.modbus4j.ProcessImage;
 import com.serotonin.modbus4j.code.FunctionCode;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
@@ -9,20 +8,14 @@ public class ReadDiscreteInputsRequest extends ReadBinaryRequest {
     public ReadDiscreteInputsRequest(int slaveId, int startOffset, int numberOfBits) throws ModbusTransportException {
         super(slaveId, startOffset, numberOfBits);
     }
-    
+
     ReadDiscreteInputsRequest(int slaveId) throws ModbusTransportException {
         super(slaveId);
     }
-    
+
     @Override
     public byte getFunctionCode() {
         return FunctionCode.READ_DISCRETE_INPUTS;
-    }
-    
-    @Override
-    protected void matchesImpl(ModbusResponse response) throws MessageMismatchException {
-        if (!(response instanceof ReadDiscreteInputsResponse))
-            throw new MessageMismatchException(response.getClass().toString());
     }
 
     @Override

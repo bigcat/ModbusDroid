@@ -1,29 +1,35 @@
 package com.serotonin.modbus4j.base;
 
-import com.serotonin.io.messaging.RequestHandler;
+import com.serotonin.messaging.RequestHandler;
+import com.serotonin.modbus4j.ModbusSlaveSet;
 import com.serotonin.modbus4j.ProcessImage;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.msg.ModbusRequest;
+import com.serotonin.modbus4j.msg.ModbusResponse;
 
 abstract public class BaseRequestHandler implements RequestHandler {
-    protected int slaveId;
-    protected ProcessImage processImage;
+    protected ModbusSlaveSet slave;
 
-    public BaseRequestHandler(int slaveId, ProcessImage processImage) {
-        this.slaveId = slaveId;
-        this.processImage = processImage;
+    public BaseRequestHandler(ModbusSlaveSet slave) {
+        this.slave = slave;
     }
-    
-    protected boolean checkSlaveId(ModbusRequest request) throws ModbusTransportException {
+
+    protected ModbusResponse handleRequestImpl(ModbusRequest request) throws ModbusTransportException {
+        int slaveId = request.getSlaveId();
+
         // Check the slave id.
-        if (request.getSlaveId() == 0) {
-            request.handle(processImage);
-            return false;
+        if (slaveId == 0) {
+            // Broadcast message. Send to all process images.
+            for (ProcessImage processImage : slave.getProcessImages())
+                request.handle(processImage);
+            return null;
         }
-        
-        if (request.getSlaveId() != slaveId)
-            return false;
-        
-        return true;
+
+        // Find the process image to which to send.
+        ProcessImage processImage = slave.getProcessImage(slaveId);
+        if (processImage == null)
+            return null;
+
+        return request.handle(processImage);
     }
 }

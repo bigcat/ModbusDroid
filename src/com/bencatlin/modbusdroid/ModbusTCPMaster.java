@@ -80,7 +80,7 @@ public class ModbusTCPMaster extends TcpMaster {
         	
         	default:
         		request = null;
-        		throw new IllegalFunctionException( (byte) registerRange );
+        		throw new IllegalFunctionException( (byte) registerRange, locator.getSlaveAndRange().getSlaveId() );
         	}	
         	//Not sure putting a try-catch combo here is a good idea, might be better to pass exception upstream
         	try {

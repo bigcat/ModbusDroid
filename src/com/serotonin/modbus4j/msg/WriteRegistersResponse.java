@@ -8,16 +8,16 @@ import com.serotonin.util.queue.ByteQueue;
 public class WriteRegistersResponse extends ModbusResponse {
     private int startOffset;
     private int numberOfRegisters;
-    
+
     @Override
     public byte getFunctionCode() {
         return FunctionCode.WRITE_REGISTERS;
     }
-    
+
     WriteRegistersResponse(int slaveId) throws ModbusTransportException {
         super(slaveId);
     }
-    
+
     WriteRegistersResponse(int slaveId, int startOffset, int numberOfRegisters) throws ModbusTransportException {
         super(slaveId);
         this.startOffset = startOffset;
@@ -34,5 +34,13 @@ public class WriteRegistersResponse extends ModbusResponse {
     protected void readResponse(ByteQueue queue) {
         startOffset = ModbusUtils.popUnsignedShort(queue);
         numberOfRegisters = ModbusUtils.popUnsignedShort(queue);
+    }
+
+    public int getStartOffset() {
+        return startOffset;
+    }
+
+    public int getNumberOfRegisters() {
+        return numberOfRegisters;
     }
 }

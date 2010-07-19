@@ -12,7 +12,7 @@ import com.serotonin.util.queue.ByteQueue;
  */
 public class ExceptionResponse extends ModbusResponse {
     private final byte functionCode;
-    
+
     public ExceptionResponse(int slaveId, byte functionCode, byte exceptionCode) throws ModbusTransportException {
         super(slaveId);
         this.functionCode = functionCode;
@@ -23,12 +23,14 @@ public class ExceptionResponse extends ModbusResponse {
     public byte getFunctionCode() {
         return functionCode;
     }
-    
+
     @Override
     protected void readResponse(ByteQueue queue) {
+        // no op
     }
 
     @Override
     protected void writeResponse(ByteQueue queue) {
+        // no op
     }
 }

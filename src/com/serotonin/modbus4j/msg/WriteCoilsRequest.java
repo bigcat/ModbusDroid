@@ -1,6 +1,5 @@
 package com.serotonin.modbus4j.msg;
 
-import com.serotonin.io.messaging.MessageMismatchException;
 import com.serotonin.modbus4j.ProcessImage;
 import com.serotonin.modbus4j.base.ModbusUtils;
 import com.serotonin.modbus4j.code.FunctionCode;
@@ -11,23 +10,23 @@ public class WriteCoilsRequest extends ModbusRequest {
     private int startOffset;
     private int numberOfBits;
     private byte[] data;
-    
+
     public WriteCoilsRequest(int slaveId, int startOffset, boolean[] bdata) throws ModbusTransportException {
         super(slaveId);
-        
+
         ModbusUtils.validateOffset(startOffset);
         ModbusUtils.validateNumberOfBits(bdata.length);
         ModbusUtils.validateEndOffset(startOffset + bdata.length);
-        
+
         this.startOffset = startOffset;
         numberOfBits = bdata.length;
         data = convertToBytes(bdata);
     }
-  
+
     WriteCoilsRequest(int slaveId) throws ModbusTransportException {
         super(slaveId);
     }
-    
+
     @Override
     protected void writeRequest(ByteQueue queue) {
         ModbusUtils.pushShort(queue, startOffset);
@@ -35,17 +34,11 @@ public class WriteCoilsRequest extends ModbusRequest {
         ModbusUtils.pushByte(queue, data.length);
         queue.push(data);
     }
-    
-    @Override
-    protected void matchesImpl(ModbusResponse response) throws MessageMismatchException {
-        if (!(response instanceof WriteCoilsResponse))
-            throw new MessageMismatchException(response.getClass().toString());
-    }
-    
+
     @Override
     ModbusResponse handleImpl(ProcessImage processImage) throws ModbusTransportException {
         boolean[] bdata = convertToBooleans(data);
-        for (int i=0; i<numberOfBits; i++)
+        for (int i = 0; i < numberOfBits; i++)
             processImage.writeCoil(startOffset + i, bdata[i]);
         return new WriteCoilsResponse(slaveId, startOffset, numberOfBits);
     }
@@ -64,7 +57,7 @@ public class WriteCoilsRequest extends ModbusRequest {
     protected void readRequest(ByteQueue queue) {
         startOffset = ModbusUtils.popUnsignedShort(queue);
         numberOfBits = ModbusUtils.popUnsignedShort(queue);
-        data = new byte[ModbusUtils.popByte(queue)];
+        data = new byte[ModbusUtils.popUnsignedByte(queue)];
         queue.pop(data);
     }
 }
