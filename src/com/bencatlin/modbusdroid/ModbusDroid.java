@@ -12,6 +12,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 //import android.util.Log;
 import android.util.Log;
@@ -84,12 +86,58 @@ public class ModbusDroid extends Activity {
 	private AlertDialog dataTypeAlert;
 	private MenuItem dataTypeMenuItem;
 	
+	private Context context = this;
 	private MbDroidMsgExceptionHandler exceptionHandler;
 	
 	private SharedPreferences settings;
 	Thread mbThread = null;
 	
 	private Object[] modbusData;
+	
+	
+	// Make a new handler to get messages from the polling thread and display them in the UI
+	Handler pollHandler = new Handler () {
+		
+		@Override
+		public void handleMessage (Message pollingMsg) {
+			int arg1 = pollingMsg.arg1;
+			int arg2 = pollingMsg.arg2;
+			String msgString = (String) pollingMsg.obj;
+			String displayString;
+			
+			switch (arg1) {
+			
+				case 0: //We are disconnected or disconnecting
+					hideMBList();
+					switch (arg2) {
+					
+					case 0: //Disconnected from the host
+						displayString = "Disconnected from " + hostIPaddress;
+						break;
+					case 1: // We never connected to a host
+						displayString = "Not connected to anything!";
+						break;
+					default:
+						displayString = "Whoops! Something is wrong";
+						break;
+					}
+					break;
+				case 1: //We are connected
+					displayString = "Connected to " + hostIPaddress;
+					showMBList();
+					break;
+				case -1: //Got some type of error
+					displayString = "Error: " + msgString;
+					break;
+				default:
+					displayString = "Busted!";
+					break;
+			}
+			Toast.makeText(getBaseContext(), displayString, 10).show();	
+			super.handleMessage(pollingMsg);
+		}
+		
+	};
 	
 	
 	/*
@@ -114,6 +162,7 @@ public class ModbusDroid extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context = this;
         setContentView(R.layout.main);
             
         final EditText offset_editText = (EditText) findViewById(R.id.offset);
@@ -124,35 +173,6 @@ public class ModbusDroid extends Activity {
         //get the preferences currently stored in the SharedPreferences
         getSharedSettings();
         oldDataType = dataType;
-        
-        //Handler for spinner to select modbus data type
-        final Spinner s = (Spinner) findViewById(R.id.point_Type);
-        
-        //build array with modbus point types
-        ArrayAdapter adapter = ArrayAdapter.createFromResource(
-                this, R.array.pointTypes, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        s.setAdapter(adapter);
-        
-        //Build the menu for data type display
-        dataTypeMenuBuilder = new AlertDialog.Builder(this);
-        dataTypeMenuBuilder.setTitle("Display Registers as: ");
-        dataTypeMenuBuilder.setSingleChoiceItems(R.array.dataTypeItems, dataType, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                //Set datatype here
-            	oldDataType = item;
-            	setDataType(item);
-				
-				dataTypeAlert.dismiss();
-            }
-        });
-        dataTypeMenuBuilder.setCancelable(true);
-        dataTypeAlert = dataTypeMenuBuilder.create();
-        
-        //Set values in UI elements according to shared preferences
-        offset_editText.setText(Integer.toString(offset));
-        registerLength.setText(Integer.toString(m_count));
-        s.setSelection(regType - 1);  //double-check this vs. new ints for regType
         
         //set up some dummy list data
         modbusData = new Object[] {0};
@@ -188,15 +208,39 @@ public class ModbusDroid extends Activity {
         mbTCPMaster.setTimeout(30000);
         mbTCPMaster.setExceptionHandler(exceptionHandler);
         
-        try {
-        	mbLocator = new ModbusMultiLocator (1, regType, offset, dataType, m_count);
-        }
-        catch (Exception e) {
-        	Log.e(getClass().getSimpleName(), e.getMessage() );
-        }
+        setModbusMultiLocator();
         // get a new Poll modbus object that we will pass to the thread starter
-        mb = new PollModbus(mbTCPMaster, pollTime, mbLocator, mbList);  
+        mb = new PollModbus(mbTCPMaster, pollTime, mbLocator, mbList, pollHandler);  
        
+        //Handler for spinner to select modbus data type
+        final Spinner s = (Spinner) findViewById(R.id.point_Type);
+        
+        //build array with modbus point types
+        ArrayAdapter adapter = ArrayAdapter.createFromResource(
+                this, R.array.pointTypes, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        s.setAdapter(adapter);
+        
+        //Build the menu for data type display
+        dataTypeMenuBuilder = new AlertDialog.Builder(this);
+        dataTypeMenuBuilder.setTitle("Display Registers as: ");
+        dataTypeMenuBuilder.setSingleChoiceItems(R.array.dataTypeItems, dataType, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                //Set datatype here
+            	oldDataType = item;
+            	setDataType(item);
+				
+				dataTypeAlert.dismiss();
+            }
+        });
+        dataTypeMenuBuilder.setCancelable(true);
+        dataTypeAlert = dataTypeMenuBuilder.create();
+        
+        //Set values in UI elements according to shared preferences
+        offset_editText.setText(Integer.toString(offset));
+        registerLength.setText(Integer.toString(m_count));
+        s.setSelection(regType - 1);  //double-check this vs. new ints for regType
+        
         // Set up Listeners for
         // all the different changes on the main screen
         
@@ -341,54 +385,12 @@ public class ModbusDroid extends Activity {
             
         case CONNECT:
         	
-        	if (mb == null) {
-        		mb = new PollModbus(mbTCPMaster, pollTime, mbLocator, mbList);	
-        	}
-        	else if (mb.isConnected()) {
-        		mb.disconnect();	
-        	}
-        	
-        	//Check to see if the thread is running - if it is, shut it down before creating a new one.
-        	if (mbThread != null ) {
-        		if (mbThread.isAlive()) {
-        			mbThread.interrupt();
-        			mbThread = null;
-        		}
-        		mbThread = null;
-        	}
-        	mbThread = new Thread(mb, "PollingThread");
-        	//mb.connect();
-        	Toast.makeText(this, "Connecting to " + hostIPaddress, 10).show();
-        	mbThread.start();
-        	
-        	if (mb.isConnected()){
-        		Toast.makeText(this, "Connected!!!!", 5).show();
-        	}
-        	
-        	if ( notConnTextView.isShown() ) {
-        		mainLayout.removeView(notConnTextView);
-        		mainLayout.addView(mbList, listParams);
-        		//showView(mbList);
-        	}
+        	startPollingThread();
         	
         	return true;
         	
         case DISCONNECT:
-        	if (!mb.isConnected()){
-        		Toast.makeText(this, "Not Connected to Anything!", 10).show();
-        	}
-        	else {
-        		//mbThread.interrupt();
-        		mb.disconnect();
-        		Toast.makeText(this, "Disconnected from " + hostIPaddress, 10).show();
-        	}
-        	
-        	if ( mbList.isShown() ) {
-        		mainLayout.removeView(mbList);
-        		mainLayout.addView(notConnTextView);
-        		//hideView(mbList);
-        	}
-        	
+        	killPollingThread();
         	return true;
         case DATATYPES:
             dataTypeAlert.show();
@@ -396,6 +398,85 @@ public class ModbusDroid extends Activity {
             return true;
         }
         return false;
+    }
+    
+    /*
+     * startPollingThread
+     * 
+     * Determines if there is a connection, and if there is a polling thread object
+     * already created.  If not, it connects and creates a new polling thread.
+     * 
+     */
+    private void startPollingThread() {
+    	if (mb == null) {
+    		mb = new PollModbus(mbTCPMaster, pollTime, mbLocator, mbList, pollHandler);	
+    	}
+    	else if (mb.isConnected()) {
+    		mb.disconnect();	
+    	}
+    	
+    	//Check to see if the thread is running - if it is, shut it down before creating a new one.
+    	if (mbThread != null ) {
+    		if (mbThread.isAlive()) {
+    			mbThread.interrupt();
+    			mbThread = null;
+    		}
+    		mbThread = null;
+    	}
+    	mbThread = new Thread(mb, "PollingThread");
+    	//mb.connect();
+    	//Toast.makeText(this, "Connecting to " + hostIPaddress, 10).show();
+    	mbThread.start();
+    	
+    	//if (mb.isConnected()){
+    	//	Toast.makeText(this, "Connected!!!!", 5).show();
+    	//}
+    	
+    	//TODO: Let the new messaging from polling thread handle this
+    	//showMBList();
+    }
+    
+    /*
+     * killPollingThread
+     * 
+     *  If there is a polling thread object then disconnect
+     *  
+     */
+    
+    private void killPollingThread(){
+    	if (!mb.isConnected()){
+    		Toast.makeText(this, "Not Connected to Anything!", 10).show();
+    	}
+    	else {
+    		//mbThread.interrupt();
+    		mb.disconnect();
+    		//Toast.makeText(this, "Disconnected from " + hostIPaddress, 10).show();
+    	}
+    	
+    	// TODO: Let the messaging system handle this part
+    	//hideMBList();
+    	
+    }
+    
+    /*
+     * showMBDisconnected
+     * Changes the modbus values list to 'disconnected' message
+     */
+    
+    public void hideMBList() {
+    	if ( mbList.isShown() ) {
+    		mainLayout.removeView(mbList);
+    		mainLayout.addView(notConnTextView);
+    		//hideView(mbList);
+    	}
+    }
+    
+    public void showMBList () {
+    	if ( notConnTextView.isShown() ) {
+    		mainLayout.removeView(notConnTextView);
+    		mainLayout.addView(mbList, listParams);
+    		//showView(mbList);
+    	}
     }
     
     /*
@@ -440,6 +521,20 @@ public class ModbusDroid extends Activity {
      * Helper functions
      */
     //
+    /**
+     * 
+     */
+    private void setModbusMultiLocator () {
+    	try {
+        	mbLocator = new ModbusMultiLocator (1, regType, offset, dataType, m_count);
+        }
+        catch (Exception e) {
+        	//TODO: Might want to add more better error handling here
+        	Log.e(getClass().getSimpleName(), e.getMessage() );
+        }
+    }
+    
+    
     
     /**
      * Gets settings from the Shared Preferences, and sets local variables
@@ -511,17 +606,21 @@ public class ModbusDroid extends Activity {
     		break;
     	case RegisterRange.HOLDING_REGISTER:
     		mbList.setStartAddress(4000 + offset);
+    		if (dataType <= 1 )
+    			dataType = 2;
     		setDataType(dataType);
     		break;
     	case RegisterRange.INPUT_REGISTER:
     		mbList.setStartAddress(3000 + offset);
+    		if (dataType <= 1 )
+    			dataType = 2;
     		setDataType(dataType);
     	}
     	
-    	if (mbLocator != null ) {
-        	mbLocator.setSlaveAndRange(new SlaveAndRange(1, regType) );    		
+    	if (mbLocator == null ) {
+            setModbusMultiLocator();
     	}
-
+    	mbLocator.setSlaveAndRange(new SlaveAndRange(1, regType) );
     	
     	SharedPreferences.Editor editor = settings.edit();
 		editor.putInt("registerType", regType);

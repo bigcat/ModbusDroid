@@ -1,5 +1,7 @@
 package com.bencatlin.modbusdroid;
 
+import android.util.Log;
+
 import com.serotonin.modbus4j.ModbusLocator;
 import com.serotonin.modbus4j.base.SlaveAndRange;
 import com.serotonin.modbus4j.code.DataType;
@@ -51,6 +53,7 @@ public class ModbusMultiLocator extends ModbusLocator {
      * 
      */
     public synchronized void setSlaveAndRange (SlaveAndRange slaveAndRange ) {
+    	Log.i(getClass().getSimpleName(), "Setting Register Type to: " + slaveAndRange.getRange());
     	this.slaveAndRange = slaveAndRange;
     	//this.setDataType(slaveAndRange.getRange());
     }
@@ -79,10 +82,19 @@ public class ModbusMultiLocator extends ModbusLocator {
 		
 		for (int i = 0; i < valueLength; i++) {
 			
-			System.arraycopy(bytes, ((registersPerValue *2)*i), 
+			if (dataType > DataType.BINARY ) {
+				System.arraycopy(bytes, ((registersPerValue *2)*i), 
 					temp, 0, (registersPerValue * 2));
 			
-			values[i] = this.bytesToValue(temp, offset);
+				values[i] = this.bytesToValue(temp, offset);
+			}
+			else {
+				int bitIndex = i%8;
+				int byteIndex = i/8;
+				System.arraycopy(bytes, byteIndex , temp, 0, 1 );
+				values[i] = this.bytesToValue(temp, this.getSlaveAndRange().getRange(), bitIndex, DataType.BINARY, (byte) 0);
+			}
+				
 			
 		}
 		
