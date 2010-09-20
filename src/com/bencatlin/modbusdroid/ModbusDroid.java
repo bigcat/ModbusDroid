@@ -178,7 +178,7 @@ public class ModbusDroid extends Activity {
         modbusData = new Object[] {0};
         
         //lets get our new list
-        mbList = new ModbusListView( this, modbusData );
+        mbList = new ModbusListView( this, modbusData , DataType.getRegisterCount(dataType) );
         mbList.setFocusable( false );
         
         //need to get the parent relative layout before adding the view
@@ -227,8 +227,8 @@ public class ModbusDroid extends Activity {
         dataTypeMenuBuilder.setSingleChoiceItems(R.array.dataTypeItems, dataType, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 //Set datatype here
-            	oldDataType = item;
-            	setDataType(item);
+            	oldDataType = item +1;
+            	setDataType(item + 1);
 				
 				dataTypeAlert.dismiss();
             }
@@ -248,10 +248,9 @@ public class ModbusDroid extends Activity {
         s.setOnItemSelectedListener( new OnItemSelectedListener() {
         		public void onItemSelected ( AdapterView<?> parent, View view, int pos, long id) {
     					regType = s.getSelectedItemPosition() + 1;        				
-        				//mbLocator.setSlaveAndRange(new SlaveAndRange (1, regType));
         				
         				switchRegType(regType);
-        				
+        			
         		    }
         		public void onNothingSelected(AdapterView parent) {
         		      // Do nothing.
@@ -424,16 +423,8 @@ public class ModbusDroid extends Activity {
     		mbThread = null;
     	}
     	mbThread = new Thread(mb, "PollingThread");
-    	//mb.connect();
-    	//Toast.makeText(this, "Connecting to " + hostIPaddress, 10).show();
     	mbThread.start();
     	
-    	//if (mb.isConnected()){
-    	//	Toast.makeText(this, "Connected!!!!", 5).show();
-    	//}
-    	
-    	//TODO: Let the new messaging from polling thread handle this
-    	//showMBList();
     }
     
     /*
@@ -442,7 +433,6 @@ public class ModbusDroid extends Activity {
      *  If there is a polling thread object then disconnect
      *  
      */
-    
     private void killPollingThread(){
     	if (!mb.isConnected()){
     		Toast.makeText(this, "Not Connected to Anything!", 10).show();
@@ -450,12 +440,7 @@ public class ModbusDroid extends Activity {
     	else {
     		//mbThread.interrupt();
     		mb.disconnect();
-    		//Toast.makeText(this, "Disconnected from " + hostIPaddress, 10).show();
-    	}
-    	
-    	// TODO: Let the messaging system handle this part
-    	//hideMBList();
-    	
+    	}    	
     }
     
     /*
@@ -535,7 +520,6 @@ public class ModbusDroid extends Activity {
     }
     
     
-    
     /**
      * Gets settings from the Shared Preferences, and sets local variables
      */
@@ -553,7 +537,7 @@ public class ModbusDroid extends Activity {
     } //getSharedSettings
     
     /**
-     * 
+     * Sets the datatype (i.e. Float, 16-bit decimal, etc.)
      */
     public void setDataType (int dataType ) {
     	// We need to check first if this dataType is valid for the register range
@@ -574,6 +558,8 @@ public class ModbusDroid extends Activity {
     		mbLocator.setDataType(this.dataType);
     	}
     	
+    	mbList.setRegistersPerValue(DataType.getRegisterCount(this.dataType));
+    	
     	SharedPreferences.Editor editor = settings.edit();
 		editor.putInt("dataType", dataType);
 		editor.commit();
@@ -591,14 +577,14 @@ public class ModbusDroid extends Activity {
     	switch (regType) {
     	
     	case RegisterRange.COIL_STATUS:
-    		mbList.setStartAddress(1000 + offset);
+    		mbList.setStartAddress(0000 + offset);
     		//if (dataType != DataType.BINARY) {
     			oldDataType = dataType;
         		setDataType(DataType.BINARY);
     		//}
     		break;
     	case RegisterRange.INPUT_STATUS:
-    		mbList.setStartAddress(0000 + offset);
+    		mbList.setStartAddress(1000 + offset);
     		//if (dataType != DataType.BINARY) {
     			oldDataType = dataType;
         		setDataType(DataType.BINARY);

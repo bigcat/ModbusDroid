@@ -2,6 +2,9 @@ package com.bencatlin.modbusdroid;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import com.serotonin.modbus4j.code.DataType;
+
 import android.app.ListActivity;
 import android.content.Context;
 import android.util.Log;
@@ -28,12 +31,15 @@ import android.widget.TextView;
     	private String[] modbusDisplayAddresses;
     	public EfficientAdapter adapter = null;
     	
+    	private int registersPerValue;
+    	
     	/** Constructor
     	 * @param context
     	 * @param modbusResponse - data passed to list adapter
     	 */
-    	public ModbusListView (Context context, Object[] modbusResponse) {
+    	public ModbusListView (Context context, Object[] modbusResponse, int registersPerValue) {
     		super(context);
+    		this.registersPerValue = registersPerValue;
     		this.modbusResponse = modbusResponse;
     		this.oldValues = oldValues = modbusResponse.clone();
     		// set the adapter immediately
@@ -50,6 +56,10 @@ import android.widget.TextView;
     		return regStartAddress;
     	}
     	
+    	public void setRegistersPerValue (int registersPerValue) {
+    		this.registersPerValue = registersPerValue;
+    	}
+    	
     	/*
     	 * This is blantantly stolen from the example API code
     	 * and modified for my purposes
@@ -61,10 +71,6 @@ import android.widget.TextView;
             public EfficientAdapter(Context context) {
                 // Cache the LayoutInflate to avoid asking for a new one each time.
                 mInflater = LayoutInflater.from(context);
-
-                // Icons bound to the rows.
-                //mIcon1 = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon48x48_1);
-                //mIcon2 = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon48x48_2);
             }
 
             /**
@@ -132,8 +138,19 @@ import android.widget.TextView;
                 // Bind the data efficiently with the holder.
                 //Log.i(getClass().getSimpleName(), "Set values for list row");
                 holder.value.setText( (String) modbusResponse[position].toString());
-                holder.address.setText( Integer.toString(regStartAddress + position));
-                
+                if (regStartAddress < 1000) {
+                	String tempAddress = Integer.toString(regStartAddress + (position * registersPerValue) );
+                	if (tempAddress.length() < 4 ){
+                		for (int i = tempAddress.length(); i < 4; i++) {
+                			tempAddress = "0" + tempAddress;
+                		}
+                	}
+                	holder.address.setText(tempAddress);
+                }
+                else {
+                	holder.address.setText( Integer.toString(regStartAddress + (position * registersPerValue) ) );
+                }
+                	
                 return convertView;
             }
 

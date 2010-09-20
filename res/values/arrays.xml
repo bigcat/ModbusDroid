@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="pointTypes">
-        <item>Discrete Inputs</item>
         <item>Holding Coils</item>
+        <item>Discrete Inputs</item>
         <item>Holding Registers</item>
         <item>Input Registers</item>
     </string-array>
 
 	<string-array name="dataTypeItems">
-		<item></item>
 		<item>Binary</item>
 		<item>Unsigned Integer (16bit)</item>
 		<item>Signed Integer (16bit)</item>
