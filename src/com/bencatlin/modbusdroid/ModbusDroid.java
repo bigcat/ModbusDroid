@@ -157,6 +157,25 @@ public class ModbusDroid extends Activity {
 	
 	/*
 	 * (non-Javadoc)
+	 * @see android.app.Activity#onStop()
+	 * We are overriding this because we need to explicitly
+	 * disconnect if we are connected when the app stops
+	 * 
+	 * Consider using onPause/onResume to allow a hidden app
+	 * to continue polling and then re-display results.
+	 */
+	@Override
+	public void onStop () {
+		super.onStop();
+		
+		if (mb.isConnected()) {
+			mb.disconnect();
+		}
+	}
+	
+	
+	/*
+	 * (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
     @Override
