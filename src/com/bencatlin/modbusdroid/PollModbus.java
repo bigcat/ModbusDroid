@@ -19,7 +19,7 @@ import net.wimpi.modbus.procimg.Register;
 import net.wimpi.modbus.util.BitVector;
 */
 
-/*PollModbus_old
+/*PollModbus
  *  This is a runnable that polls in the background
  *  
  *  After being almost done with this, I think possibly extending 
@@ -46,6 +46,7 @@ public class PollModbus implements Runnable {
 	
 	private ModbusTCPMaster mbTCPMaster;
 	private ModbusMultiLocator mbLocator;
+	private ModbusMultiLocator mbWriteLocator;
 	
 	private Handler mainThreadHandler;
 	
@@ -56,7 +57,9 @@ public class PollModbus implements Runnable {
 	
 	private ModbusListView m_ListView = null;
 	
-	//private Message m;
+	private boolean doWriteValue = false;
+	private Object writeValue;
+	
 	
 	/* PollModus Constructor
 	 *  adr = IP address
@@ -73,7 +76,9 @@ public class PollModbus implements Runnable {
 		this.mbLocator = mbLocator;
 		this.m_ListView = m_ListView;
 		this.mainThreadHandler = mainThreadHandler;
-		//m = this.mainThreadHandler.obtainMessage();
+		this.mbWriteLocator = null;
+		this.writeValue = false;
+		
 	}
 	
 	/**
@@ -150,8 +155,15 @@ public class PollModbus implements Runnable {
 		return m_connected;
 	}
 
+	public synchronized void writeValue (ModbusMultiLocator writeLocator, Object value) {
+		this.mbWriteLocator = writeLocator;
+		this.writeValue = value;
+		this.doWriteValue = true;
+		this.notify();
+	}
+	
 	/**
-	 * 
+	 * This is where the magic happens - we just loop until disconnected
 	 * 
 	 */
 	
@@ -229,6 +241,14 @@ public class PollModbus implements Runnable {
 				else {
 									
 					this.disconnect();
+				}
+				
+				// after we call writeValue from the UI thread, 
+				// then we call notify() and this code gets processed 
+				if (doWriteValue) {
+					
+					mbTCPMaster.setValue(mbWriteLocator, writeValue);
+					doWriteValue = false;
 				}
 			}			
 		}

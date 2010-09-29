@@ -18,9 +18,11 @@ import android.preference.PreferenceManager;
 //import android.util.Log;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup.LayoutParams;
@@ -32,6 +34,7 @@ import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -70,6 +73,7 @@ public class ModbusDroid extends Activity {
 	private int m_count;
 	private int regType;
 	private int dataType;
+	private int writeRegOffset;
 	
 	private String oldHostIPaddress = hostIPaddress;
 	//private int oldPollTime = pollTime;
@@ -86,14 +90,15 @@ public class ModbusDroid extends Activity {
 	private AlertDialog dataTypeAlert;
 	private MenuItem dataTypeMenuItem;
 	
-	private Context context = this;
+	private Object mbWriteValue;
+	
 	private MbDroidMsgExceptionHandler exceptionHandler;
 	
 	private SharedPreferences settings;
 	Thread mbThread = null;
 	
 	private Object[] modbusData;
-	
+	private AlertDialog writeDialog;
 	
 	// Make a new handler to get messages from the polling thread and display them in the UI
 	Handler pollHandler = new Handler () {
@@ -181,7 +186,6 @@ public class ModbusDroid extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context = this;
         setContentView(R.layout.main);
             
         final EditText offset_editText = (EditText) findViewById(R.id.offset);
@@ -198,7 +202,7 @@ public class ModbusDroid extends Activity {
         
         //lets get our new list
         mbList = new ModbusListView( this, modbusData , DataType.getRegisterCount(dataType) );
-        mbList.setFocusable( false );
+        mbList.setFocusable( false );     
         
         //need to get the parent relative layout before adding the view
         mainLayout = (RelativeLayout) findViewById(R.id.main_layout);
@@ -224,7 +228,7 @@ public class ModbusDroid extends Activity {
         mbFactory = new ModbusTCPFactory ();
         mbTCPMaster = mbFactory.createModbusTCPMaster(ipParameters, true);
         exceptionHandler = new MbDroidMsgExceptionHandler();
-        mbTCPMaster.setTimeout(30000);
+        mbTCPMaster.setTimeout(15000);
         mbTCPMaster.setExceptionHandler(exceptionHandler);
         
         setModbusMultiLocator();
@@ -239,6 +243,45 @@ public class ModbusDroid extends Activity {
                 this, R.array.pointTypes, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s.setAdapter(adapter);
+        
+        //
+        LayoutInflater factory = LayoutInflater.from(this);
+        final View textEntryView = factory.inflate(R.layout.write_value, null);
+        AlertDialog.Builder writeDialogBuilder = new
+        	AlertDialog.Builder(this);
+    	writeDialogBuilder.setTitle("Write to Register")
+    		.setView(textEntryView)
+    		.setIcon(android.R.drawable.ic_menu_edit)
+        	.setMessage("Value to Write to Register")
+        	.setNegativeButton("Cancel", 
+        			new DialogInterface.OnClickListener() {
+        		public void onClick(DialogInterface dialog, int which) {
+        			dialog.dismiss();
+        		}
+        	})
+        	.setPositiveButton("Write", 
+        			new DialogInterface.OnClickListener() {
+        		public void onClick(DialogInterface dialog, int which) {
+        			
+        			//clear the current value in the write dialog 
+        			// - Need to get the value of the current listadapter displayed modbus value and put it in the edittext box and select it all.
+        			//( (EditText) textEntryView.findViewById(R.id.write_value_number) ).selectAll();
+        			
+        			// TODO: Need to do a case statment here to handle the correct typcasting for mbWriteValue
+        			mbWriteValue = (float) Float.parseFloat( ((EditText) textEntryView.findViewById(R.id.write_value_number)).getText().toString() );
+        			
+        			dialog.dismiss();
+        			
+        			Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
+        			Log.i(getClass().getSimpleName(), "Writing Value: " + mbWriteValue );
+        			
+        			mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
+        					, mbWriteValue);
+        			//mb.notify();
+        			
+        		}
+        });
+        writeDialog = writeDialogBuilder.create();
         
         //Build the menu for data type display
         dataTypeMenuBuilder = new AlertDialog.Builder(this);
@@ -262,6 +305,16 @@ public class ModbusDroid extends Activity {
         
         // Set up Listeners for
         // all the different changes on the main screen
+        mbList.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView arg0, View arg1, 
+            		int position, long id) {
+                writeDialog.show();
+                writeRegOffset = offset + (DataType.getRegisterCount(dataType) * position );
+              }
+        	}
+        
+        );
+        
         
         // Listener for spinner selection
         s.setOnItemSelectedListener( new OnItemSelectedListener() {

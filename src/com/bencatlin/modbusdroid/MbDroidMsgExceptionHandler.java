@@ -1,8 +1,10 @@
 package com.bencatlin.modbusdroid;
 
+//import android.os.Message;
 import android.util.Log;
 
 import com.serotonin.messaging.MessagingExceptionHandler;
+
 
 
 public class MbDroidMsgExceptionHandler implements MessagingExceptionHandler {
