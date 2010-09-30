@@ -93,7 +93,10 @@ import android.widget.TextView;
              * @see android.widget.ListAdapter#getItem(int)
              */
             public Object getItem(int position) {
-                return position;
+                
+            	return modbusResponse[position];
+            	
+            	//return position;
             }
 
             /**

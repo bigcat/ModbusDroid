@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 //import android.util.Log;
+import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -263,10 +264,6 @@ public class ModbusDroid extends Activity {
         			new DialogInterface.OnClickListener() {
         		public void onClick(DialogInterface dialog, int which) {
         			
-        			//clear the current value in the write dialog 
-        			// - Need to get the value of the current listadapter displayed modbus value and put it in the edittext box and select it all.
-        			//( (EditText) textEntryView.findViewById(R.id.write_value_number) ).selectAll();
-        			
         			// TODO: Need to do a case statment here to handle the correct typcasting for mbWriteValue
         			mbWriteValue = (float) Float.parseFloat( ((EditText) textEntryView.findViewById(R.id.write_value_number)).getText().toString() );
         			
@@ -308,8 +305,47 @@ public class ModbusDroid extends Activity {
         mbList.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView arg0, View arg1, 
             		int position, long id) {
-                writeDialog.show();
-                writeRegOffset = offset + (DataType.getRegisterCount(dataType) * position );
+
+            	switch (dataType) {
+            		case DataType.BINARY:
+            			//TODO: setup a special View for registers when boolean display (after boolean is fixed)
+            			// and another for just a single boolean
+            			break;
+            		case DataType.TWO_BYTE_INT_UNSIGNED:
+            		case DataType.FOUR_BYTE_INT_UNSIGNED:
+            		case DataType.FOUR_BYTE_INT_UNSIGNED_SWAPPED:
+            		case DataType.EIGHT_BYTE_INT_UNSIGNED:
+            		case DataType.EIGHT_BYTE_INT_UNSIGNED_SWAPPED:
+            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER));
+            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER));
+            			break;
+            		case DataType.TWO_BYTE_INT_SIGNED:
+            		case DataType.FOUR_BYTE_INT_SIGNED:
+            		case DataType.FOUR_BYTE_INT_SIGNED_SWAPPED:
+            		case DataType.EIGHT_BYTE_INT_SIGNED:
+            		case DataType.EIGHT_BYTE_INT_SIGNED_SWAPPED:
+            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER  | InputType.TYPE_NUMBER_FLAG_SIGNED));
+            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED));
+            			break;
+            		case DataType.EIGHT_BYTE_FLOAT:
+            		case DataType.EIGHT_BYTE_FLOAT_SWAPPED:
+            		case DataType.FOUR_BYTE_FLOAT_SWAPPED:
+            		case DataType.FOUR_BYTE_FLOAT:
+            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER  | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL));
+            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL));
+            			break;
+            	}
+            	//Get the position in the listview's value, and then select it all
+            	// this should make it easier for the user to not get confused which item was touched
+    			( (EditText) textEntryView.findViewById(R.id.write_value_number) ).setText( 
+    					mbList.getAdapter().getItem( position ).toString() );
+    			( (EditText) textEntryView.findViewById(R.id.write_value_number) ).selectAll();
+    			
+    			
+    			
+    			writeRegOffset = offset + (DataType.getRegisterCount(dataType) * position );
+            	writeDialog.show();
+                
               }
         	}
         
