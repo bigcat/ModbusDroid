@@ -85,7 +85,7 @@ public class ModbusTCPMaster extends TcpMaster {
         	//Not sure putting a try-catch combo here is a good idea, might be better to pass exception upstream
         	try {
         		//Log.i(getClass().getSimpleName(), "Sending request: ");
-        		Log.i(getClass().getSimpleName(), "Function Code: " + request.getFunctionCode() + ", SlaveID: " + request.getSlaveId() );
+        		//Log.i(getClass().getSimpleName(), "Function Code: " + request.getFunctionCode() + ", SlaveID: " + request.getSlaveId() );
         		response = (ReadResponse) send(request);
         		
         		data = response.getData();

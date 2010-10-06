@@ -9,6 +9,7 @@ package com.bencatlin.modbusdroid;
 
 public final class R {
     public static final class array {
+        public static final int booleanWriteSelection=0x7f050002;
         public static final int dataTypeItems=0x7f050001;
         public static final int pointTypes=0x7f050000;
     }
@@ -34,7 +35,7 @@ public final class R {
     public static final class layout {
         public static final int main=0x7f030000;
         public static final int modbus_value_row=0x7f030001;
-        public static final int write_value=0x7f030002;
+        public static final int write_value_numeric=0x7f030002;
     }
     public static final class string {
         public static final int Conn_Settings=0x7f060002;

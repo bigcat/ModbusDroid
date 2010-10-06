@@ -90,6 +90,12 @@ public class ModbusDroid extends Activity {
 	private AlertDialog.Builder dataTypeMenuBuilder;
 	private AlertDialog dataTypeAlert;
 	private MenuItem dataTypeMenuItem;
+	private View textEntryNumericView;
+	private AlertDialog writeDialog;
+	private AlertDialog writeBoolRegisterDialog;
+	//private AlertDialog.Builder writeBoolRegisterDialogBuilder;
+	private AlertDialog writeBoolCoilDialog;
+	private AlertDialog writeNumericRegisterDialog;
 	
 	private Object mbWriteValue;
 	
@@ -99,7 +105,7 @@ public class ModbusDroid extends Activity {
 	Thread mbThread = null;
 	
 	private Object[] modbusData;
-	private AlertDialog writeDialog;
+
 	
 	// Make a new handler to get messages from the polling thread and display them in the UI
 	Handler pollHandler = new Handler () {
@@ -221,6 +227,126 @@ public class ModbusDroid extends Activity {
         //mainLayout.addView(mbList, listParams);
         mainLayout.addView(notConnTextView, listParams);
         
+        /** 
+         * 		We are going to create three dialogs, 
+         * 		and then show the correct one depending on what
+         * 		register range and data type we are using 
+         */
+        
+        // Set up the numeric entry write dialog
+   		LayoutInflater factory = LayoutInflater.from(this);
+   		textEntryNumericView = factory.inflate(R.layout.write_value_numeric, null);
+   		AlertDialog.Builder writeNumericDialogBuilder = new
+       		AlertDialog.Builder(this);
+   		writeNumericDialogBuilder.setTitle("Write to Register")
+   			.setView(textEntryNumericView)
+   			.setIcon(android.R.drawable.ic_menu_edit) //TODO: Better icon here
+   			.setMessage("Value to Write to Register")
+   			.setNegativeButton("Cancel", 
+   					new DialogInterface.OnClickListener() {
+   				public void onClick(DialogInterface dialog, int which) {
+   					dialog.dismiss();
+   				}
+   			})
+   			.setPositiveButton("Write", 
+   					new DialogInterface.OnClickListener() {
+   				public void onClick(DialogInterface dialog, int which) {
+       			
+   					// Let's set up the correct values depending on what type of display we are showing
+   					switch (dataType) {
+   					case DataType.TWO_BYTE_INT_UNSIGNED:
+   					case DataType.TWO_BYTE_INT_SIGNED:
+   	   					mbWriteValue = (short) Short.parseShort( ((EditText) textEntryNumericView.findViewById(R.id.write_value_number)).getText().toString() );
+   						break;
+   					case DataType.FOUR_BYTE_INT_UNSIGNED:
+   					case DataType.FOUR_BYTE_INT_UNSIGNED_SWAPPED:
+   					case DataType.FOUR_BYTE_INT_SIGNED:
+   					case DataType.FOUR_BYTE_INT_SIGNED_SWAPPED:
+   	   					mbWriteValue = (int) Integer.parseInt( ((EditText) textEntryNumericView.findViewById(R.id.write_value_number)).getText().toString() );
+   						break;
+   					case DataType.EIGHT_BYTE_INT_UNSIGNED:
+   					case DataType.EIGHT_BYTE_INT_UNSIGNED_SWAPPED:
+   					case DataType.EIGHT_BYTE_INT_SIGNED:
+   					case DataType.EIGHT_BYTE_INT_SIGNED_SWAPPED:
+   	   					mbWriteValue = (long) Float.parseFloat( ((EditText) textEntryNumericView.findViewById(R.id.write_value_number)).getText().toString() );
+   						break;
+   					case DataType.FOUR_BYTE_FLOAT_SWAPPED:
+   					case DataType.FOUR_BYTE_FLOAT:
+   	   					mbWriteValue = (float) Float.parseFloat( ((EditText) textEntryNumericView.findViewById(R.id.write_value_number)).getText().toString() );
+   						break;
+   					case DataType.EIGHT_BYTE_FLOAT:
+   					case DataType.EIGHT_BYTE_FLOAT_SWAPPED:
+   	   					mbWriteValue = (double) Double.parseDouble( ((EditText) textEntryNumericView.findViewById(R.id.write_value_number)).getText().toString() );
+   						break;
+   					}
+
+   					//Get rid of the dialog so the UI isn't waiting around for the write to happen before the dialog is dismissed
+   					dialog.dismiss();
+       			
+   					Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
+       			
+   					mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
+   						, mbWriteValue);
+       			
+   				}
+       	});
+   		writeNumericRegisterDialog = writeNumericDialogBuilder.create();
+        
+   		
+   		//Next create the Boolean display register dialog
+   		AlertDialog.Builder writeBoolRegisterDialogBuilder = new AlertDialog.Builder(this);
+        writeBoolRegisterDialogBuilder.setTitle("Write to Register")
+   			.setIcon(android.R.drawable.ic_menu_edit) //TODO: Better icon here
+   			.setMessage("Bits to write to Register");
+        //TODO: Change to MultipleChoiceItems
+        writeBoolRegisterDialogBuilder.setMultiChoiceItems(
+        		new CharSequence[] {"Bit 0", "Bit 1", "Bit 2", "Bit 3", "Bit 4", "Bit 5", "Bit 6", "Bit 7", "Bit 8", "Bit 9", "Bit 10", "Bit 11", "Bit 12", "Bit 13", "Bit 14", "Bit 15"},
+        		new boolean[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false },
+        		new DialogInterface.OnMultiChoiceClickListener() {
+					public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+						return;  //Don't need to do anything here, just need a blank 						
+					}
+				}
+        );
+        writeBoolRegisterDialogBuilder.setPositiveButton("Write", new DialogInterface.OnClickListener() {
+   				public void onClick(DialogInterface dialog, int which) {
+   				//TODO: Turn array of booleans into a value and write it
+   					dialog.dismiss();
+   				}
+   				
+   			})
+   			.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+   				public void onClick(DialogInterface dialog, int which) {
+   					dialog.dismiss();
+   				}
+   				
+   			});
+        writeBoolRegisterDialogBuilder.setCancelable(true);
+        writeBoolCoilDialog = writeBoolRegisterDialogBuilder.create();
+   		
+        
+        
+   		//Finally we create the Boolean display for Coils dialog
+        AlertDialog.Builder writeBoolCoilDialogBuilder = new AlertDialog.Builder(this);
+        writeBoolCoilDialogBuilder.setTitle("Write to Coil")
+   			.setIcon(android.R.drawable.ic_menu_edit) //TODO: Better icon here
+        .setSingleChoiceItems( new CharSequence[]  {"False", "True"}, 0, 
+        		new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                //TODO: write true or false to a holding coil
+            	mbWriteValue = (boolean) (item != 0);
+				Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
+
+            	mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
+					, mbWriteValue);
+            	dialog.dismiss();
+            	return;
+            }
+        });
+        writeBoolCoilDialogBuilder.setCancelable(true);
+        writeBoolCoilDialog = writeBoolCoilDialogBuilder.create();
+   		
+        
         switchRegType(regType);
         
         ipParameters = new IpParameters();
@@ -245,40 +371,6 @@ public class ModbusDroid extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s.setAdapter(adapter);
         
-        //
-        LayoutInflater factory = LayoutInflater.from(this);
-        final View textEntryView = factory.inflate(R.layout.write_value, null);
-        AlertDialog.Builder writeDialogBuilder = new
-        	AlertDialog.Builder(this);
-    	writeDialogBuilder.setTitle("Write to Register")
-    		.setView(textEntryView)
-    		.setIcon(android.R.drawable.ic_menu_edit)
-        	.setMessage("Value to Write to Register")
-        	.setNegativeButton("Cancel", 
-        			new DialogInterface.OnClickListener() {
-        		public void onClick(DialogInterface dialog, int which) {
-        			dialog.dismiss();
-        		}
-        	})
-        	.setPositiveButton("Write", 
-        			new DialogInterface.OnClickListener() {
-        		public void onClick(DialogInterface dialog, int which) {
-        			
-        			// TODO: Need to do a case statment here to handle the correct typcasting for mbWriteValue
-        			mbWriteValue = (float) Float.parseFloat( ((EditText) textEntryView.findViewById(R.id.write_value_number)).getText().toString() );
-        			
-        			dialog.dismiss();
-        			
-        			Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
-        			Log.i(getClass().getSimpleName(), "Writing Value: " + mbWriteValue );
-        			
-        			mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
-        					, mbWriteValue);
-        			//mb.notify();
-        			
-        		}
-        });
-        writeDialog = writeDialogBuilder.create();
         
         //Build the menu for data type display
         dataTypeMenuBuilder = new AlertDialog.Builder(this);
@@ -305,53 +397,42 @@ public class ModbusDroid extends Activity {
         mbList.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView arg0, View arg1, 
             		int position, long id) {
-
-            	switch (dataType) {
-            		case DataType.BINARY:
-            			//TODO: setup a special View for registers when boolean display (after boolean is fixed)
-            			// and another for just a single boolean
-            			break;
-            		case DataType.TWO_BYTE_INT_UNSIGNED:
-            		case DataType.FOUR_BYTE_INT_UNSIGNED:
-            		case DataType.FOUR_BYTE_INT_UNSIGNED_SWAPPED:
-            		case DataType.EIGHT_BYTE_INT_UNSIGNED:
-            		case DataType.EIGHT_BYTE_INT_UNSIGNED_SWAPPED:
-            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER));
-            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER));
-            			break;
-            		case DataType.TWO_BYTE_INT_SIGNED:
-            		case DataType.FOUR_BYTE_INT_SIGNED:
-            		case DataType.FOUR_BYTE_INT_SIGNED_SWAPPED:
-            		case DataType.EIGHT_BYTE_INT_SIGNED:
-            		case DataType.EIGHT_BYTE_INT_SIGNED_SWAPPED:
-            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER  | InputType.TYPE_NUMBER_FLAG_SIGNED));
-            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED));
-            			break;
-            		case DataType.EIGHT_BYTE_FLOAT:
-            		case DataType.EIGHT_BYTE_FLOAT_SWAPPED:
-            		case DataType.FOUR_BYTE_FLOAT_SWAPPED:
-            		case DataType.FOUR_BYTE_FLOAT:
-            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER  | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL));
-            			( (TextView) textEntryView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL));
-            			break;
+            	
+            	if (dataType == DataType.BINARY) {
+            		if (regType == RegisterRange.COIL_STATUS) {
+            			
+            			int listSelector = -1;
+            			String tempString = mbList.getAdapter().getItem( position ).toString();
+            			if (tempString.equals("true"))
+            				listSelector = 1;
+            			else if (tempString.equals("false"))
+            				listSelector = 0;
+            			writeBoolCoilDialog.getListView().setItemChecked( listSelector, true );
+            			//TODO: set the current register value to the default before showing the alert dialog
+            		}
+            		else if (regType == RegisterRange.HOLDING_REGISTER) {
+            			//TODO: set the current register boolean to multi-choice items
+            		}
+            		
             	}
-            	//Get the position in the listview's value, and then select it all
-            	// this should make it easier for the user to not get confused which item was touched
-    			( (EditText) textEntryView.findViewById(R.id.write_value_number) ).setText( 
-    					mbList.getAdapter().getItem( position ).toString() );
-    			( (EditText) textEntryView.findViewById(R.id.write_value_number) ).selectAll();
-    			
-    			
-    			
-    			writeRegOffset = offset + (DataType.getRegisterCount(dataType) * position );
+            	else if (regType == RegisterRange.HOLDING_REGISTER ) {
+            		//Get the position in the listview's value, and then select it all
+            		// this should make it easier for the user to not get confused which item was touched
+            		( (EditText) textEntryNumericView.findViewById(R.id.write_value_number) ).setText( 
+            				mbList.getAdapter().getItem( position ).toString() );
+            		( (EditText) textEntryNumericView.findViewById(R.id.write_value_number) ).selectAll();
+            		
+            	}
+            	else {
+            		// if this isn't a write-able registerRange then just exit
+            		return;
+            	}
+            	writeRegOffset = offset + (DataType.getRegisterCount(dataType) * position );
             	writeDialog.show();
-                
               }
         	}
         
         );
-        
-        
         // Listener for spinner selection
         s.setOnItemSelectedListener( new OnItemSelectedListener() {
         		public void onItemSelected ( AdapterView<?> parent, View view, int pos, long id) {
@@ -671,9 +752,47 @@ public class ModbusDroid extends Activity {
     	SharedPreferences.Editor editor = settings.edit();
 		editor.putInt("dataType", dataType);
 		editor.commit();
+		
+		// Now we switch the write-dialog display to be correct when it is called.
+		switch (dataType) {
+		case DataType.BINARY:
+			//TODO: setup a special View for registers when boolean display (after boolean is fixed)
+			// and another for just a single boolean
+			if (regType == RegisterRange.COIL_STATUS)
+				writeDialog = writeBoolCoilDialog;
+			else if (regType == RegisterRange.HOLDING_REGISTER)
+				writeDialog = writeBoolRegisterDialog;
+			break;
+		case DataType.TWO_BYTE_INT_UNSIGNED:
+		case DataType.FOUR_BYTE_INT_UNSIGNED:
+		case DataType.FOUR_BYTE_INT_UNSIGNED_SWAPPED:
+		case DataType.EIGHT_BYTE_INT_UNSIGNED:
+		case DataType.EIGHT_BYTE_INT_UNSIGNED_SWAPPED:
+			( (TextView) textEntryNumericView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER));
+			( (TextView) textEntryNumericView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER));
+			writeDialog = writeNumericRegisterDialog;
+			break;
+		case DataType.TWO_BYTE_INT_SIGNED:
+		case DataType.FOUR_BYTE_INT_SIGNED:
+		case DataType.FOUR_BYTE_INT_SIGNED_SWAPPED:
+		case DataType.EIGHT_BYTE_INT_SIGNED:
+		case DataType.EIGHT_BYTE_INT_SIGNED_SWAPPED:
+			( (TextView) textEntryNumericView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER  | InputType.TYPE_NUMBER_FLAG_SIGNED));
+			( (TextView) textEntryNumericView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED));
+			writeDialog = writeNumericRegisterDialog;
+			break;
+		case DataType.EIGHT_BYTE_FLOAT:
+		case DataType.EIGHT_BYTE_FLOAT_SWAPPED:
+		case DataType.FOUR_BYTE_FLOAT_SWAPPED:
+		case DataType.FOUR_BYTE_FLOAT:
+			( (TextView) textEntryNumericView.findViewById(R.id.write_value_number) ).setInputType((InputType.TYPE_CLASS_NUMBER  | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL));
+			( (TextView) textEntryNumericView.findViewById(R.id.write_value_number) ).setRawInputType((InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL));
+			writeDialog = writeNumericRegisterDialog;
+			break;
+		}
     	
     }
-    
+
     
     /**
      * 

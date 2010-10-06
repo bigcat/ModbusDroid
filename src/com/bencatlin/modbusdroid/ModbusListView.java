@@ -95,8 +95,7 @@ import android.widget.TextView;
             public Object getItem(int position) {
                 
             	return modbusResponse[position];
-            	
-            	//return position;
+
             }
 
             /**

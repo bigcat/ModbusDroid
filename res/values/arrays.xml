@@ -26,5 +26,10 @@
 		<item>BCD (16bit)</item>
 		<item>BCD (32bit)</item>
 	</string-array>
+	
+	<string-array name="booleanWriteSelection">
+		<item>False</item>
+		<item>True</item>
+	</string-array>
 
 </resources>
