@@ -1,3 +1,23 @@
+/*
+ * ============================================================================
+ * GNU General Public License
+ * ============================================================================
+ *
+ * Copyright (C) 2006-2011 Serotonin Software Technologies Inc. http://serotoninsoftware.com
+ * @author Matthew Lohbihler
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.serotonin.modbus4j.ip.tcp;
 
 import java.io.IOException;
@@ -5,14 +25,18 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import com.serotonin.messaging.MessageControl;
+import com.serotonin.messaging.OutgoingRequestMessage;
 import com.serotonin.messaging.StreamTransport;
 import com.serotonin.modbus4j.ModbusMaster;
+import com.serotonin.modbus4j.base.BaseMessageParser;
 import com.serotonin.modbus4j.exception.ModbusInitException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
-import com.serotonin.modbus4j.ip.IpMessageParser;
-import com.serotonin.modbus4j.ip.IpMessageRequest;
 import com.serotonin.modbus4j.ip.IpMessageResponse;
 import com.serotonin.modbus4j.ip.IpParameters;
+import com.serotonin.modbus4j.ip.encap.EncapMessageParser;
+import com.serotonin.modbus4j.ip.encap.EncapMessageRequest;
+import com.serotonin.modbus4j.ip.xa.XaMessageParser;
+import com.serotonin.modbus4j.ip.xa.XaMessageRequest;
 import com.serotonin.modbus4j.msg.ModbusRequest;
 import com.serotonin.modbus4j.msg.ModbusResponse;
 
@@ -23,7 +47,7 @@ public class TcpMaster extends ModbusMaster {
     private final boolean keepAlive;
 
     // Runtime fields.
-    private IpMessageParser ipMessageParser;
+    private BaseMessageParser ipMessageParser;
     private Socket socket;
     private StreamTransport transport;
     private MessageControl conn;
@@ -39,7 +63,11 @@ public class TcpMaster extends ModbusMaster {
 
     @Override
     synchronized public void init() throws ModbusInitException {
-        ipMessageParser = new IpMessageParser(true);
+        if (ipParameters.isEncapsulated())
+            ipMessageParser = new EncapMessageParser(true);
+        else
+            ipMessageParser = new XaMessageParser(true);
+
         try {
             if (keepAlive)
                 openConnection();
@@ -68,7 +96,11 @@ public class TcpMaster extends ModbusMaster {
         }
 
         // Wrap the modbus request in a ip request.
-        IpMessageRequest ipRequest = new IpMessageRequest(request, getNextTransactionId());
+        OutgoingRequestMessage ipRequest;
+        if (ipParameters.isEncapsulated())
+            ipRequest = new EncapMessageRequest(request);
+        else
+            ipRequest = new XaMessageRequest(request, getNextTransactionId());
 
         // Send the request to get the response.
         IpMessageResponse ipResponse;

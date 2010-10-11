@@ -1,5 +1,23 @@
 /*
- * Created on 28-Sep-2006
+/*
+ * ============================================================================
+ * GNU General Public License
+ * ============================================================================
+ *
+ * Copyright (C) 2006-2011 Serotonin Software Technologies Inc. http://serotoninsoftware.com
+ * @author Matthew Lohbihler
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.serotonin.modbus4j.ip.tcp;
 
@@ -13,25 +31,32 @@ import java.util.concurrent.TimeUnit;
 import com.serotonin.messaging.MessageControl;
 import com.serotonin.messaging.TestableTransport;
 import com.serotonin.modbus4j.ModbusSlaveSet;
+import com.serotonin.modbus4j.base.BaseMessageParser;
+import com.serotonin.modbus4j.base.BaseRequestHandler;
 import com.serotonin.modbus4j.base.ModbusUtils;
 import com.serotonin.modbus4j.exception.ModbusInitException;
-import com.serotonin.modbus4j.ip.IpMessageParser;
-import com.serotonin.modbus4j.ip.IpRequestHandler;
+import com.serotonin.modbus4j.ip.encap.EncapMessageParser;
+import com.serotonin.modbus4j.ip.encap.EncapRequestHandler;
+import com.serotonin.modbus4j.ip.xa.XaMessageParser;
+import com.serotonin.modbus4j.ip.xa.XaRequestHandler;
 
 public class TcpSlave extends ModbusSlaveSet {
     // Configuration fields
-    private int port = ModbusUtils.TCP_PORT;
+    private final int port;
+    final boolean encapsulated;
 
     // Runtime fields.
     private ServerSocket serverSocket;
     final ExecutorService executorService;
 
-    public TcpSlave() {
-        executorService = Executors.newCachedThreadPool();
+    public TcpSlave(boolean encapsulated) {
+        this(ModbusUtils.TCP_PORT, encapsulated);
     }
 
-    public void setPort(int port) {
+    public TcpSlave(int port, boolean encapsulated) {
         this.port = port;
+        this.encapsulated = encapsulated;
+        executorService = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -87,14 +112,23 @@ public class TcpSlave extends ModbusSlaveSet {
         }
 
         public void run() {
-            IpMessageParser ipMessageParser = new IpMessageParser(false);
-            IpRequestHandler ipRequestHandler = new IpRequestHandler(TcpSlave.this);
+            BaseMessageParser messageParser;
+            BaseRequestHandler requestHandler;
+
+            if (encapsulated) {
+                messageParser = new EncapMessageParser(false);
+                requestHandler = new EncapRequestHandler(TcpSlave.this);
+            }
+            else {
+                messageParser = new XaMessageParser(false);
+                requestHandler = new XaRequestHandler(TcpSlave.this);
+            }
 
             conn = new MessageControl();
             conn.setExceptionHandler(getExceptionHandler());
 
             try {
-                conn.start(transport, ipMessageParser, ipRequestHandler);
+                conn.start(transport, messageParser, requestHandler);
                 executorService.execute(transport);
             }
             catch (IOException e) {

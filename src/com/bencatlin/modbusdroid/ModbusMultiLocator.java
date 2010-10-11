@@ -89,13 +89,29 @@ public class ModbusMultiLocator extends ModbusLocator {
 				values[i] = this.bytesToValue(temp, offset);
 			}
 			else {
-				int bitIndex = i%8;
-				int byteIndex = i/8;
-				System.arraycopy(bytes, byteIndex , temp, 0, 1 );
-				values[i] = this.bytesToValue(temp, this.getSlaveAndRange().getRange(), bitIndex, DataType.BINARY, (byte) 0);
-			}
 				
-			
+				if ( (slaveAndRange.getRange() == RegisterRange.COIL_STATUS ) || (slaveAndRange.getRange() == RegisterRange.INPUT_STATUS ) ) {
+					int bitIndex = i%8;
+					int byteIndex = i/8;
+					System.arraycopy(bytes, byteIndex , temp, 0, 1 );
+					values[i] = this.bytesToValue(temp, this.getSlaveAndRange().getRange(), bitIndex, DataType.BINARY, (byte) 0);
+				}
+				else {  //convert to register data to binary string
+					System.arraycopy(bytes, (2*i), temp, 0, 2);
+					String binaryString1 = Integer.toBinaryString( (int) temp[0] );
+					String binaryString2 = Integer.toBinaryString( (int) temp[1] );
+					binaryString1.trim();
+					binaryString2.trim();
+					//pad string with zeros
+					for (int j = 0; j < (Integer.numberOfLeadingZeros( (int) temp[0] ) - 24); j++ ) {
+						binaryString1 = "0" + binaryString1;
+					}
+					for (int k = 0; k < (Integer.numberOfLeadingZeros( (int) temp[1] ) - 24); k++ ) {
+						binaryString2 = "0" + binaryString2;
+					}
+					values[i] = (String) ( binaryString1 + "\n" + binaryString2 ); 
+					}
+				}	
 		}
 		
 		return values;

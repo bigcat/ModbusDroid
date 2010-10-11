@@ -1,5 +1,22 @@
 /*
- * Created on 28-Sep-2006
+ * ============================================================================
+ * GNU General Public License
+ * ============================================================================
+ *
+ * Copyright (C) 2006-2011 Serotonin Software Technologies Inc. http://serotoninsoftware.com
+ * @author Matthew Lohbihler
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.serotonin.modbus4j;
 
@@ -25,7 +42,6 @@ import com.serotonin.modbus4j.msg.ModbusRequest;
 import com.serotonin.modbus4j.msg.ModbusResponse;
 import com.serotonin.modbus4j.msg.ReadCoilsRequest;
 import com.serotonin.modbus4j.msg.ReadDiscreteInputsRequest;
-import com.serotonin.modbus4j.msg.ReadExceptionStatusRequest;
 import com.serotonin.modbus4j.msg.ReadHoldingRegistersRequest;
 import com.serotonin.modbus4j.msg.ReadInputRegistersRequest;
 import com.serotonin.modbus4j.msg.ReadResponse;
@@ -233,14 +249,13 @@ abstract public class ModbusMaster extends Modbus {
 
     public boolean testSlaveNode(int node) {
         try {
-            send(new ReadExceptionStatusRequest(node));
-            // If there was no transport exception, there's a node there.
-            return true;
+            send(new ReadHoldingRegistersRequest(node, 0, 1));
         }
         catch (ModbusTransportException e) {
-            // ignore
+            // If there was a transport exception, there's no node there.
+            return false;
         }
-        return false;
+        return true;
     }
 
     public int getRetries() {
@@ -323,8 +338,8 @@ abstract public class ModbusMaster extends Modbus {
         else if (functionGroup.getFunctionCode() == FunctionCode.READ_DISCRETE_INPUTS)
             request = new ReadDiscreteInputsRequest(slaveId, startOffset, length);
         else if (functionGroup.getFunctionCode() == FunctionCode.READ_HOLDING_REGISTERS)
-            request = new ReadHoldingRegistersRequest(slaveId, functionGroup.getStartOffset(), functionGroup
-                    .getLength());
+            request = new ReadHoldingRegistersRequest(slaveId, functionGroup.getStartOffset(),
+                    functionGroup.getLength());
         else if (functionGroup.getFunctionCode() == FunctionCode.READ_INPUT_REGISTERS)
             request = new ReadInputRegistersRequest(slaveId, functionGroup.getStartOffset(), functionGroup.getLength());
         else
