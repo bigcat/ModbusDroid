@@ -307,8 +307,8 @@ public class ModbusDroid extends Activity {
 						return;  //Don't need to do anything here, just need a blank 						
 					}
 				}
-        );
-        writeBoolRegisterDialogBuilder.setPositiveButton("Write", new DialogInterface.OnClickListener() {
+        	)
+        	.setPositiveButton("Write", new DialogInterface.OnClickListener() {
    				public void onClick(DialogInterface dialog, int which) {
    				//TODO: Turn array of booleans into a value and write it
    					dialog.dismiss();
@@ -320,9 +320,10 @@ public class ModbusDroid extends Activity {
    					dialog.dismiss();
    				}
    				
-   			});
-        writeBoolRegisterDialogBuilder.setCancelable(true);
-        writeBoolCoilDialog = writeBoolRegisterDialogBuilder.create();
+   			})
+   			.setCancelable(true);
+       //create the dialog
+        writeBoolRegisterDialog = writeBoolRegisterDialogBuilder.create();
    		
         
         
@@ -407,11 +408,19 @@ public class ModbusDroid extends Activity {
             				listSelector = 1;
             			else if (tempString.equals("false"))
             				listSelector = 0;
+            			// This sets the correct value to be checked. - may need to do some 'unchecking' for the initial appearance of this dialog.
             			writeBoolCoilDialog.getListView().setItemChecked( listSelector, true );
-            			//TODO: set the current register value to the default before showing the alert dialog
+            			
             		}
             		else if (regType == RegisterRange.HOLDING_REGISTER) {
             			//TODO: set the current register boolean to multi-choice items
+            			char[] boolValues = ((String) mbList.getAdapter().getItem( position ) ).toCharArray();
+            			for(int i=0; i<boolValues.length;i++){  
+            				if (boolValues[i] == '0')                             
+            					writeBoolRegisterDialog.getListView().setItemChecked(i, false);
+            				else if (boolValues[i] == '1')
+            					writeBoolRegisterDialog.getListView().setItemChecked(i, true);
+            			}
             		}
             		
             	}
