@@ -187,12 +187,17 @@ abstract public class ModbusMaster extends Modbus {
         }
         else {
             // Writing to holding registers.
-            if (locator.getDataType() == DataType.BINARY) {
+             
+        	//Commenting this out because I'm never going to do a single-bit write, but instead will
+        	// display the binary version of the register as a string of 0's and 1's when our datatype is binary, 
+        	// and then I will convert it backwards into a short number value
+        	/*
+        	if (locator.getDataType() == DataType.BINARY) { //&& (locator.getBit() != -1)  // Possibly add this and a setbit() method in the locator to handle this smarter in the future???
                 if (!(value instanceof Boolean))
                     throw new InvalidDataConversionException("Only boolean values can be written to coils");
                 setHoldingRegisterBit(slaveId, writeOffset, locator.getBit(), ((Boolean) value).booleanValue());
             }
-            else {
+            else { */
                 // Writing some kind of value to a holding register.
                 if (!(value instanceof Number))
                     throw new InvalidDataConversionException("Numeric value is required");
@@ -202,7 +207,7 @@ abstract public class ModbusMaster extends Modbus {
                     setValue(new WriteRegisterRequest(slaveId, writeOffset, data[0]));
                 else
                     setValue(new WriteRegistersRequest(slaveId, writeOffset, data));
-            }
+            //}
         }
 
     }

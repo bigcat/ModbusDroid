@@ -45,6 +45,13 @@ public class ModbusMultiLocator extends ModbusLocator {
     /*
      * 
      */
+    public synchronized void setBit (byte bit ) {
+    	this.bit = bit;
+    }
+    
+    /*
+     * 
+     */
     public synchronized void setOffset ( int offset ) {
     	this.offset = offset;
     }
@@ -98,18 +105,13 @@ public class ModbusMultiLocator extends ModbusLocator {
 				}
 				else {  //convert to register data to binary string
 					System.arraycopy(bytes, (2*i), temp, 0, 2);
-					String binaryString1 = Integer.toBinaryString( (int) temp[0] );
-					String binaryString2 = Integer.toBinaryString( (int) temp[1] );
-					binaryString1.trim();
-					binaryString2.trim();
-					//pad string with zeros
-					for (int j = 0; j < (Integer.numberOfLeadingZeros( (int) temp[0] ) - 24); j++ ) {
-						binaryString1 = "0" + binaryString1;
-					}
-					for (int k = 0; k < (Integer.numberOfLeadingZeros( (int) temp[1] ) - 24); k++ ) {
-						binaryString2 = "0" + binaryString2;
-					}
-					values[i] = (String) ( binaryString1 + "\n" + binaryString2 ); 
+					String binaryString1 = byteToBoolString( temp[0] );
+					String binaryString2 = byteToBoolString( temp[1] );
+					//binaryString1.trim();
+					//binaryString2.trim(); 
+					
+					//TODO: Handle normal as well as inverted byte order
+					values[i] = (String) ( binaryString2 + binaryString1 ); 
 					}
 				}	
 		}
@@ -118,5 +120,24 @@ public class ModbusMultiLocator extends ModbusLocator {
 		
 	}
 	
+	/*
+	 * Helper Functions
+	 * 
+	 */
+	
+	private String byteToBoolString (byte b) {
+		char[] charArray = new char[8];
+		for (int i=0; i<8; i++) {
+			if ( (b & (1 << i)) != 0 ) {
+				charArray[(i)] = '1';
+			}
+			else {
+				charArray[(i)] = '0';
+			}
+		}
+		String boolString = new String(charArray);
+		return boolString;
+		
+	}
 	
 }

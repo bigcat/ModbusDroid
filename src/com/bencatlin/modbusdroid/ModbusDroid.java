@@ -18,6 +18,7 @@ import android.preference.PreferenceManager;
 //import android.util.Log;
 import android.text.InputType;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -294,14 +295,12 @@ public class ModbusDroid extends Activity {
         
    		
    		//Next create the Boolean display register dialog
+   		CharSequence[] wordBits = {"Bit 0", "Bit 1", "Bit 2", "Bit 3", "Bit 4", "Bit 5", "Bit 6", "Bit 7", "Bit 8", "Bit 9", "Bit 10", "Bit 11", "Bit 12", "Bit 13", "Bit 14", "Bit 15"};
+   		boolean[] startingCheckboxValues = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false }; 
    		AlertDialog.Builder writeBoolRegisterDialogBuilder = new AlertDialog.Builder(this);
         writeBoolRegisterDialogBuilder.setTitle("Write to Register")
    			.setIcon(android.R.drawable.ic_menu_edit) //TODO: Better icon here
-   			.setMessage("Bits to write to Register");
-        //TODO: Change to MultipleChoiceItems
-        writeBoolRegisterDialogBuilder.setMultiChoiceItems(
-        		new CharSequence[] {"Bit 0", "Bit 1", "Bit 2", "Bit 3", "Bit 4", "Bit 5", "Bit 6", "Bit 7", "Bit 8", "Bit 9", "Bit 10", "Bit 11", "Bit 12", "Bit 13", "Bit 14", "Bit 15"},
-        		new boolean[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false },
+   			.setMultiChoiceItems( wordBits, startingCheckboxValues,
         		new DialogInterface.OnMultiChoiceClickListener() {
 					public void onClick(DialogInterface dialog, int which, boolean isChecked) {
 						return;  //Don't need to do anything here, just need a blank 						
@@ -311,6 +310,20 @@ public class ModbusDroid extends Activity {
         	.setPositiveButton("Write", new DialogInterface.OnClickListener() {
    				public void onClick(DialogInterface dialog, int which) {
    				//TODO: Turn array of booleans into a value and write it
+   					Integer tempWrite = new Integer(0);
+   					boolean[] tempBool = new boolean[16];
+   					for (int i=0; i < 16; i++) {
+   						//we want the highest bit first in the array to make the next for loop simpler
+   						tempBool[(15-i)] = writeBoolRegisterDialog.getListView().isItemChecked(i);
+   					}
+   					for(boolean b : tempBool) tempWrite = tempWrite << 1 | (b?1:0);
+   	            	
+   					
+   					mbWriteValue = (short) tempWrite.shortValue();
+   					Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
+
+   	            	mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
+   						, mbWriteValue);
    					dialog.dismiss();
    				}
    				
@@ -415,6 +428,10 @@ public class ModbusDroid extends Activity {
             		else if (regType == RegisterRange.HOLDING_REGISTER) {
             			//TODO: set the current register boolean to multi-choice items
             			char[] boolValues = ((String) mbList.getAdapter().getItem( position ) ).toCharArray();
+            			if (boolValues.length > 16 ) {
+            				Toast.makeText(getBaseContext(), "Register data holding too many characters: " + boolValues.length, 5).show();
+            				
+            			}
             			for(int i=0; i<boolValues.length;i++){  
             				if (boolValues[i] == '0')                             
             					writeBoolRegisterDialog.getListView().setItemChecked(i, false);
@@ -828,8 +845,8 @@ public class ModbusDroid extends Activity {
     		break;
     	case RegisterRange.HOLDING_REGISTER:
     		mbList.setStartAddress(4000 + offset);
-    		if (dataType <= 1 )
-    			dataType = 2;
+    		//if (dataType <= 1 )
+    		//	dataType = 2;
     		setDataType(dataType);
     		break;
     	case RegisterRange.INPUT_REGISTER:

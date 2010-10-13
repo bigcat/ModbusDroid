@@ -34,7 +34,7 @@ public class ModbusLocator {
     protected SlaveAndRange slaveAndRange;
     protected int offset;
     protected int dataType;
-    private byte bit = -1;
+    protected byte bit = -1;
 
     public ModbusLocator(SlaveAndRange slaveAndRange, int offset, int dataType) {
         this(slaveAndRange, offset, dataType, (byte) -1);
@@ -74,10 +74,14 @@ public class ModbusLocator {
         int range = slaveAndRange.getRange();
         if (dataType != DataType.BINARY && (range == RegisterRange.COIL_STATUS || range == RegisterRange.INPUT_STATUS))
             throw new IllegalDataTypeException("Only binary values can be read from Coil and Input ranges");
-
+        
+        // I'm not sure we need this since I'm not doing a masked write, or even how this bit validation process works
+        // - Ben Catlin 2010-10-12
+        /*
         if ((range == RegisterRange.HOLDING_REGISTER || range == RegisterRange.INPUT_REGISTER)
                 && dataType == DataType.BINARY)
             ModbusUtils.validateBit(bit);
+        */
     }
 
     public int getDataType() {
@@ -309,7 +313,12 @@ public class ModbusLocator {
             long l = Double.doubleToLongBits(value.doubleValue());
             return new short[] { (short) l, (short) (l >> 16), (short) (l >> 32), (short) (l >> 48) };
         }
-
+        
+        // Handle a single register converted from a binary string
+        if ( (dataType == DataType.BINARY) && (value instanceof Number) ) {
+        	return new short[] { value.shortValue() };
+        }
+        
         throw new RuntimeException("Unsupported data type: " + dataType);
     }
 

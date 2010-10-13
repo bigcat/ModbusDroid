@@ -1,14 +1,11 @@
 package com.bencatlin.modbusdroid;
 
 
-import com.serotonin.modbus4j.code.RegisterRange;
 import com.serotonin.modbus4j.exception.ModbusInitException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
-
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
 /* After switching all the way from jamodbus to modbus4j
  * we don't need these anymore, need the modbus4j instead
@@ -49,11 +46,6 @@ public class PollModbus implements Runnable {
 	private ModbusMultiLocator mbWriteLocator;
 	
 	private Handler mainThreadHandler;
-	
-	private static final int INPUT_DESCRETES = 1;
-	private static final int HOLDING_COIL = 2;
-	private static final int INPUT_REGISTER = 3;
-	private static final int HOLDING_REGISTER = 4;
 	
 	private ModbusListView m_ListView = null;
 	
@@ -169,9 +161,6 @@ public class PollModbus implements Runnable {
 	
 	public void run () {
 		modbusValues = null;
-		long errorCount = 0;
-		long startTime;
-		long elapsedTime;
 		Message m = this.mainThreadHandler.obtainMessage();
 		
 		if (!this.isConnected()) {
