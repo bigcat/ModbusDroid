@@ -139,7 +139,12 @@ import android.widget.TextView;
 
                 // Bind the data efficiently with the holder.
                 //Log.i(getClass().getSimpleName(), "Set values for list row");
-                holder.value.setText( (String) modbusResponse[position].toString());
+                if (modbusResponse[position] != null) {
+                	holder.value.setText( (String) modbusResponse[position].toString());
+                }
+                else {
+                   	holder.value.setText("No Value Returned!");
+                    }
                 if (regStartAddress < 1000) {
                 	String tempAddress = Integer.toString(regStartAddress + (position * registersPerValue) );
                 	if (tempAddress.length() < 4 ){
@@ -152,7 +157,7 @@ import android.widget.TextView;
                 else {
                 	holder.address.setText( Integer.toString(regStartAddress + (position * registersPerValue) ) );
                 }
-                	
+                
                 return convertView;
             }
 

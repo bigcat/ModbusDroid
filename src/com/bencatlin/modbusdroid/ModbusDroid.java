@@ -141,8 +141,9 @@ public class ModbusDroid extends Activity {
 					break;
 				case -1: //Got some type of error
 					displayString = "Error: " + msgString;
+					//TODO: Write some logic to determine if we need to stop the polling thread
 					break;
-				default:
+				default: //If we didn't get one of those numbers something is busted
 					displayString = "Busted!";
 					break;
 			}
@@ -309,7 +310,7 @@ public class ModbusDroid extends Activity {
         	)
         	.setPositiveButton("Write", new DialogInterface.OnClickListener() {
    				public void onClick(DialogInterface dialog, int which) {
-   				//TODO: Turn array of booleans into a value and write it
+   					//Create short value from checked items and do modbus write
    					Integer tempWrite = new Integer(0);
    					boolean[] tempBool = new boolean[16];
    					for (int i=0; i < 16; i++) {
@@ -338,8 +339,7 @@ public class ModbusDroid extends Activity {
        //create the dialog
         writeBoolRegisterDialog = writeBoolRegisterDialogBuilder.create();
    		
-        
-        
+
    		//Finally we create the Boolean display for Coils dialog
         AlertDialog.Builder writeBoolCoilDialogBuilder = new AlertDialog.Builder(this);
         writeBoolCoilDialogBuilder.setTitle("Write to Coil")
@@ -347,7 +347,6 @@ public class ModbusDroid extends Activity {
         .setSingleChoiceItems( new CharSequence[]  {"False", "True"}, 0, 
         		new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
-                //TODO: write true or false to a holding coil
             	mbWriteValue = (boolean) (item != 0);
 				Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
 
@@ -356,11 +355,11 @@ public class ModbusDroid extends Activity {
             	dialog.dismiss();
             	return;
             }
-        });
-        writeBoolCoilDialogBuilder.setCancelable(true);
+        })
+        .setCancelable(true);
         writeBoolCoilDialog = writeBoolCoilDialogBuilder.create();
-   		
-        
+        //End of write-dialog creation section
+     
         switchRegType(regType);
         
         ipParameters = new IpParameters();
@@ -368,8 +367,9 @@ public class ModbusDroid extends Activity {
         ipParameters.setPort(hostPort);
         mbFactory = new ModbusTCPFactory ();
         mbTCPMaster = mbFactory.createModbusTCPMaster(ipParameters, true);
-        exceptionHandler = new MbDroidMsgExceptionHandler();
+        exceptionHandler = new MbDroidMsgExceptionHandler(pollHandler);
         mbTCPMaster.setTimeout(15000);
+        mbTCPMaster.setRetries(0);
         mbTCPMaster.setExceptionHandler(exceptionHandler);
         
         setModbusMultiLocator();

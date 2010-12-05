@@ -7,14 +7,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-/* After switching all the way from jamodbus to modbus4j
- * we don't need these anymore, need the modbus4j instead
- * 
-import net.wimpi.modbus.ModbusException;
-import net.wimpi.modbus.facade.ModbusTCPMaster;
-import net.wimpi.modbus.procimg.Register;
-import net.wimpi.modbus.util.BitVector;
-*/
 
 /*PollModbus
  *  This is a runnable that polls in the background
@@ -95,10 +87,12 @@ public class PollModbus implements Runnable {
 		catch (ModbusInitException initException) {
 			Log.e(getClass().getSimpleName(), initException.getMessage() );
 			m_connected = false;
+			throw initException;
 		}
 		catch (Exception e) {
 			Log.e(getClass().getSimpleName(), e.getMessage() );
 			m_connected = false;
+			throw e;
 			//TODO: do something here to catch other exceptions -- figure this out later
 		}
 		
@@ -231,17 +225,26 @@ public class PollModbus implements Runnable {
 		}
 		catch (ModbusTransportException m_exception) {
 			Log.e(getClass().getSimpleName(), m_exception.getMessage() );
+			this.disconnect();
+			m.arg1 = -1;
+			m.obj = m_exception.getMessage();
+			mainThreadHandler.sendMessage(m);
 		}
 		/*catch (IOException IOe) {
 			
 		}*/
 		catch (NullPointerException nullException) {
 			Log.e(getClass().getSimpleName(), "Null Pointer Exception" );
+			m.arg1 = -1;
+			m.obj = nullException.getMessage();
+			mainThreadHandler.sendMessage(m);
 			this.disconnect();
 		}
 		catch (Exception poll_e) {
 			Log.e(getClass().getSimpleName(), poll_e.getMessage() );
-			
+			m.arg1 = -1;
+			m.obj = poll_e.getMessage();
+			mainThreadHandler.sendMessage(m);
 			//if (m_connected) {
 				//this.disconnect();
 			//}

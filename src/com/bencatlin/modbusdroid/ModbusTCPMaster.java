@@ -92,8 +92,12 @@ public class ModbusTCPMaster extends TcpMaster {
         		//Log.i(getClass().getSimpleName(), "Returned data (first byte): " + Byte.toString(data[0]) );
         		values = locator.bytesToValueArray(data);
         	}
+        	catch ( ModbusTransportException e ) {
+        		Log.w( getClass().getSimpleName(), e.getMessage() );
+        		throw e;
+        	}
         	catch ( Exception e ) {
-        		Log.e(getClass().getSimpleName(), e.getMessage() );
+        		Log.e( getClass().getSimpleName(), e.getMessage() );
         	}
         }
 		
