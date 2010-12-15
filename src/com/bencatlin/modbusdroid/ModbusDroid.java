@@ -579,7 +579,7 @@ public class ModbusDroid extends Activity {
     
     /* Creates the menu items */
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, CONNECT, 0, "Connect");
+        menu.add(0, CONNECT, 0, "Connect").setIcon(R.drawable.ic_menu_connect);
         menu.add(0, DISCONNECT, 0, "Disconnect");
         menu.add(0, SETTINGS, 0, "Settings").setIcon(android.R.drawable.ic_menu_preferences);
         dataTypeMenuItem = menu.add(0, DATATYPES, 0, "Data Display").setIcon(android.R.drawable.ic_input_get);
