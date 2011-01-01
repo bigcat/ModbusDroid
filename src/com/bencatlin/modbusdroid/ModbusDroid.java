@@ -18,13 +18,11 @@ import android.preference.PreferenceManager;
 //import android.util.Log;
 import android.text.InputType;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup.LayoutParams;
@@ -218,7 +216,7 @@ public class ModbusDroid extends Activity {
         //add a rule
         listParams = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
         
-        listParams.addRule(mainLayout.BELOW, R.id.param_table);
+        listParams.addRule(RelativeLayout.BELOW, R.id.param_table);
         listParams.setMargins(10, 5, 10, 5);
         setLayoutAnim_slideupfrombottom(mbList, this);
         
@@ -242,7 +240,7 @@ public class ModbusDroid extends Activity {
        		AlertDialog.Builder(this);
    		writeNumericDialogBuilder.setTitle("Write to Register")
    			.setView(textEntryNumericView)
-   			.setIcon(android.R.drawable.ic_menu_edit) //TODO: Better icon here
+   			.setIcon(R.drawable.ic_dialog_edit) //TODO: Better icon here
    			.setMessage("Value to Write to Register")
    			.setNegativeButton("Cancel", 
    					new DialogInterface.OnClickListener() {
@@ -300,7 +298,7 @@ public class ModbusDroid extends Activity {
    		boolean[] startingCheckboxValues = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false }; 
    		AlertDialog.Builder writeBoolRegisterDialogBuilder = new AlertDialog.Builder(this);
         writeBoolRegisterDialogBuilder.setTitle("Write to Register")
-   			.setIcon(android.R.drawable.ic_menu_edit) //TODO: Better icon here
+   			.setIcon(R.drawable.ic_dialog_edit) //TODO: Better icon here
    			.setMultiChoiceItems( wordBits, startingCheckboxValues,
         		new DialogInterface.OnMultiChoiceClickListener() {
 					public void onClick(DialogInterface dialog, int which, boolean isChecked) {
@@ -343,7 +341,7 @@ public class ModbusDroid extends Activity {
    		//Finally we create the Boolean display for Coils dialog
         AlertDialog.Builder writeBoolCoilDialogBuilder = new AlertDialog.Builder(this);
         writeBoolCoilDialogBuilder.setTitle("Write to Coil")
-   			.setIcon(android.R.drawable.ic_menu_edit) //TODO: Better icon here
+   			.setIcon(R.drawable.ic_dialog_edit) //TODO: Better icon here
         .setSingleChoiceItems( new CharSequence[]  {"False", "True"}, 0, 
         		new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
@@ -439,7 +437,10 @@ public class ModbusDroid extends Activity {
             					writeBoolRegisterDialog.getListView().setItemChecked(i, true);
             			}
             		}
-            		
+            		else if ( ( regType == RegisterRange.INPUT_STATUS ) || (regType == RegisterRange.INPUT_REGISTER) ) {
+            			// if this isn't a write-able registerRange then just exit
+            			return;
+            		}
             	}
             	else if (regType == RegisterRange.HOLDING_REGISTER ) {
             		//Get the position in the listview's value, and then select it all
@@ -449,8 +450,11 @@ public class ModbusDroid extends Activity {
             		( (EditText) textEntryNumericView.findViewById(R.id.write_value_number) ).selectAll();
             		
             	}
-            	else {
+            	else  if ( ( regType == RegisterRange.INPUT_STATUS ) || (regType == RegisterRange.INPUT_REGISTER) ) {
             		// if this isn't a write-able registerRange then just exit
+            		return;
+            	}
+            	else {
             		return;
             	}
             	writeRegOffset = offset + (DataType.getRegisterCount(dataType) * position );
@@ -578,7 +582,8 @@ public class ModbusDroid extends Activity {
     }
     
     /* Creates the menu items */
-    public boolean onCreateOptionsMenu(Menu menu) {
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, CONNECT, 0, "Connect").setIcon(R.drawable.ic_menu_connect);
         menu.add(0, DISCONNECT, 0, "Disconnect").setIcon(R.drawable.ic_menu_disconnect);;
         menu.add(0, SETTINGS, 0, "Settings").setIcon(android.R.drawable.ic_menu_preferences);
@@ -589,7 +594,8 @@ public class ModbusDroid extends Activity {
     
 
     /* Handles item selections */
-    public boolean onOptionsItemSelected(MenuItem item) {
+    @Override
+	public boolean onOptionsItemSelected(MenuItem item) {
     	
         switch (item.getItemId()) {
         case SETTINGS:

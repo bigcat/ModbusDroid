@@ -6,7 +6,6 @@ import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.code.RegisterRange;
 import com.serotonin.modbus4j.exception.ErrorResponseException;
 import com.serotonin.modbus4j.exception.IllegalFunctionException;
-import com.serotonin.modbus4j.exception.InvalidDataConversionException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.ip.IpParameters;
 import com.serotonin.modbus4j.ip.tcp.TcpMaster;
@@ -24,6 +23,7 @@ public class ModbusTCPMaster extends TcpMaster {
 		super(params, keepAlive);
 	}
 	
+	@Override
 	public boolean isInitialized () {
 		return initialized;
 	}

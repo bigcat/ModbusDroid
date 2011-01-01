@@ -101,7 +101,7 @@ public class ModbusMultiLocator extends ModbusLocator {
 					int bitIndex = i%8;
 					int byteIndex = i/8;
 					System.arraycopy(bytes, byteIndex , temp, 0, 1 );
-					values[i] = this.bytesToValue(temp, this.getSlaveAndRange().getRange(), bitIndex, DataType.BINARY, (byte) 0);
+					values[i] = ModbusLocator.bytesToValue(temp, this.getSlaveAndRange().getRange(), bitIndex, DataType.BINARY, (byte) 0);
 				}
 				else {  //convert to register data to binary string
 					System.arraycopy(bytes, (2*i), temp, 0, 2);
@@ -111,7 +111,7 @@ public class ModbusMultiLocator extends ModbusLocator {
 					//binaryString2.trim(); 
 					
 					//TODO: Handle normal as well as inverted byte order
-					values[i] = (String) ( binaryString2 + binaryString1 ); 
+					values[i] = ( binaryString2 + binaryString1 ); 
 					}
 				}	
 		}

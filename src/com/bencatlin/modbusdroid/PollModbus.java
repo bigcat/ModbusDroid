@@ -162,7 +162,8 @@ public class PollModbus implements Runnable {
 				this.connect();
 				//wait while we connect
 				while(!this.isConnected()) {
-					Thread.currentThread().sleep(200);
+					Thread.currentThread();
+					Thread.sleep(200);
 				}
 
 			}

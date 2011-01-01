@@ -1,13 +1,8 @@
 package com.bencatlin.modbusdroid;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.serotonin.modbus4j.code.DataType;
-
-import android.app.ListActivity;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,7 +35,7 @@ import android.widget.TextView;
     	public ModbusListView (Context context, Object[] modbusResponse, int registersPerValue) {
     		super(context);
     		this.registersPerValue = registersPerValue;
-    		this.modbusResponse = modbusResponse;
+    		ModbusListView.modbusResponse = modbusResponse;
     		this.oldValues = oldValues = modbusResponse.clone();
     		// set the adapter immediately
     		adapter  = new EfficientAdapter(context);
@@ -140,7 +135,7 @@ import android.widget.TextView;
                 // Bind the data efficiently with the holder.
                 //Log.i(getClass().getSimpleName(), "Set values for list row");
                 if (modbusResponse[position] != null) {
-                	holder.value.setText( (String) modbusResponse[position].toString());
+                	holder.value.setText( modbusResponse[position].toString());
                 }
                 else {
                    	holder.value.setText("No Value Returned!");

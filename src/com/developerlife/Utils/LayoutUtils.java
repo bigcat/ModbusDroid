@@ -1,6 +1,7 @@
 package com.developerlife.Utils;
 
 import android.view.*;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
 
 /**
@@ -42,26 +43,26 @@ private static void applyLinearLayoutParamsTo(Layout layout, View view) {
   switch (layout) {
     case WidthFill_HeightFill:
       view.setLayoutParams(new LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.FILL_PARENT,
-          LinearLayout.LayoutParams.FILL_PARENT
+          LayoutParams.FILL_PARENT,
+          LayoutParams.FILL_PARENT
       ));
       break;
     case WidthFill_HeightWrap:
       view.setLayoutParams(new LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.FILL_PARENT,
-          LinearLayout.LayoutParams.WRAP_CONTENT
+          LayoutParams.FILL_PARENT,
+          LayoutParams.WRAP_CONTENT
       ));
       break;
     case WidthWrap_HeightFill:
       view.setLayoutParams(new LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.WRAP_CONTENT,
-          LinearLayout.LayoutParams.FILL_PARENT
+          LayoutParams.WRAP_CONTENT,
+          LayoutParams.FILL_PARENT
       ));
       break;
     case WidthWrap_HeightWrap:
       view.setLayoutParams(new LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.WRAP_CONTENT,
-          LinearLayout.LayoutParams.WRAP_CONTENT
+          LayoutParams.WRAP_CONTENT,
+          LayoutParams.WRAP_CONTENT
       ));
       break;
   }
@@ -104,26 +105,26 @@ private static void applyTableRowLayoutParamsTo(Layout layout, View view) {
   switch (layout) {
     case WidthFill_HeightFill:
       view.setLayoutParams(new TableRow.LayoutParams(
-          TableRow.LayoutParams.FILL_PARENT,
-          TableRow.LayoutParams.FILL_PARENT
+          LayoutParams.FILL_PARENT,
+          LayoutParams.FILL_PARENT
       ));
       break;
     case WidthFill_HeightWrap:
       view.setLayoutParams(new TableRow.LayoutParams(
-          TableRow.LayoutParams.FILL_PARENT,
-          TableRow.LayoutParams.WRAP_CONTENT
+          LayoutParams.FILL_PARENT,
+          LayoutParams.WRAP_CONTENT
       ));
       break;
     case WidthWrap_HeightFill:
       view.setLayoutParams(new TableRow.LayoutParams(
-          TableRow.LayoutParams.WRAP_CONTENT,
-          TableRow.LayoutParams.FILL_PARENT
+          LayoutParams.WRAP_CONTENT,
+          LayoutParams.FILL_PARENT
       ));
       break;
     case WidthWrap_HeightWrap:
       view.setLayoutParams(new TableRow.LayoutParams(
-          TableRow.LayoutParams.WRAP_CONTENT,
-          TableRow.LayoutParams.WRAP_CONTENT
+          LayoutParams.WRAP_CONTENT,
+          LayoutParams.WRAP_CONTENT
       ));
       break;
   }
@@ -135,26 +136,26 @@ private static void applyTableLayoutParamsTo(Layout layout, View view) {
   switch (layout) {
     case WidthFill_HeightFill:
       view.setLayoutParams(new TableLayout.LayoutParams(
-          TableLayout.LayoutParams.FILL_PARENT,
-          TableLayout.LayoutParams.FILL_PARENT
+          LayoutParams.FILL_PARENT,
+          LayoutParams.FILL_PARENT
       ));
       break;
     case WidthFill_HeightWrap:
       view.setLayoutParams(new TableLayout.LayoutParams(
-          TableLayout.LayoutParams.FILL_PARENT,
-          TableLayout.LayoutParams.WRAP_CONTENT
+          LayoutParams.FILL_PARENT,
+          LayoutParams.WRAP_CONTENT
       ));
       break;
     case WidthWrap_HeightFill:
       view.setLayoutParams(new TableLayout.LayoutParams(
-          TableLayout.LayoutParams.WRAP_CONTENT,
-          TableLayout.LayoutParams.FILL_PARENT
+          LayoutParams.WRAP_CONTENT,
+          LayoutParams.FILL_PARENT
       ));
       break;
     case WidthWrap_HeightWrap:
       view.setLayoutParams(new TableLayout.LayoutParams(
-          TableLayout.LayoutParams.WRAP_CONTENT,
-          TableLayout.LayoutParams.WRAP_CONTENT
+          LayoutParams.WRAP_CONTENT,
+          LayoutParams.WRAP_CONTENT
       ));
       break;
   }

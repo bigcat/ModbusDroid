@@ -20,7 +20,6 @@
  */
 package com.serotonin.modbus4j;
 
-import com.serotonin.io.serial.SerialParameters;
 import com.serotonin.modbus4j.ip.IpParameters;
 import com.serotonin.modbus4j.ip.tcp.TcpMaster;
 import com.serotonin.modbus4j.ip.tcp.TcpSlave;
