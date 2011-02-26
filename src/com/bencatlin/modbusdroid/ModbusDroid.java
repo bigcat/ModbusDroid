@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
@@ -59,6 +60,7 @@ public class ModbusDroid extends Activity {
 	private static final String IP_ADDRESS_PREFERENCE = "IpAddress";
 	private static final String PORT_PREFERENCE = "PortSetting";
 	private static final String POLL_TIME_PREFERENCE = "PollTime";
+	private static final String SLAVE_ADDRESS_PREFERENCE = "SlaveAddress";
 	
 	private IpParameters ipParameters;
 	private ModbusTCPFactory mbFactory;
@@ -67,6 +69,7 @@ public class ModbusDroid extends Activity {
 	
 	private String hostIPaddress;
 	private int hostPort;
+	private int slaveAddress = 1; // Integer between 1 and something - must be positive.
 	
 	private int pollTime;
 	private int offset;
@@ -179,12 +182,27 @@ public class ModbusDroid extends Activity {
 	@Override
 	public void onStop () {
 		super.onStop();
-		
 		if (mb.isConnected()) {
 			mb.disconnect();
 		}
 	}
 	
+	@Override 
+	protected void onSaveInstanceState(Bundle outState) { 
+		super.onSaveInstanceState(outState);
+		if (mb.isConnected()) {
+			outState.putBoolean("Connected", true);
+		}
+		else {
+			outState.putBoolean("Connected", false);
+		}
+	}
+	
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+	   	final PollModbus data = mb;
+	    return data;
+	}
 	
 	/*
 	 * (non-Javadoc)
@@ -193,8 +211,12 @@ public class ModbusDroid extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Later I want to set a custom title that says the connection status
+        //requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
         setContentView(R.layout.main);
-            
+        
+        
         final EditText offset_editText = (EditText) findViewById(R.id.offset);
         final EditText registerLength = (EditText) findViewById(R.id.length);
         
@@ -342,7 +364,7 @@ public class ModbusDroid extends Activity {
         AlertDialog.Builder writeBoolCoilDialogBuilder = new AlertDialog.Builder(this);
         writeBoolCoilDialogBuilder.setTitle("Write to Coil")
    			.setIcon(R.drawable.ic_dialog_edit) //TODO: Better icon here
-        .setSingleChoiceItems( new CharSequence[]  {"False", "True"}, 0, 
+   			.setSingleChoiceItems( new CharSequence[]  {"False", "True"}, 0, 
         		new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
             	mbWriteValue = (boolean) (item != 0);
@@ -371,9 +393,7 @@ public class ModbusDroid extends Activity {
         mbTCPMaster.setExceptionHandler(exceptionHandler);
         
         setModbusMultiLocator();
-        // get a new Poll modbus object that we will pass to the thread starter
-        mb = new PollModbus(mbTCPMaster, pollTime, mbLocator, mbList, pollHandler);  
-       
+        
         //Handler for spinner to select modbus data type
         final Spinner s = (Spinner) findViewById(R.id.point_Type);
         
@@ -424,7 +444,7 @@ public class ModbusDroid extends Activity {
             			
             		}
             		else if (regType == RegisterRange.HOLDING_REGISTER) {
-            			//TODO: set the current register boolean to multi-choice items
+            			
             			char[] boolValues = ((String) mbList.getAdapter().getItem( position ) ).toCharArray();
             			if (boolValues.length > 16 ) {
             				Toast.makeText(getBaseContext(), "Register data holding too many characters: " + boolValues.length, 5).show();
@@ -578,7 +598,27 @@ public class ModbusDroid extends Activity {
         		return false;
         	}
         });
-
+        
+        PollModbus temp = (PollModbus) getLastNonConfigurationInstance();
+        
+        if (temp != null) {
+        	//if we have an existing configuration stored, then we load it
+        	mb = temp;
+        	
+        }
+        else {
+        // otherwise get a new Poll modbus object that we will pass to the thread starter
+        mb = new PollModbus(mbTCPMaster, pollTime, mbLocator, mbList, pollHandler);  
+        }
+        
+        if (savedInstanceState != null ) {
+            boolean tempBool = savedInstanceState.getBoolean("Connected");
+            if (tempBool) {
+            	startPollingThread();
+            	
+            	showMBList();
+            }	
+        }
     }
     
     /* Creates the menu items */
@@ -732,7 +772,7 @@ public class ModbusDroid extends Activity {
      */
     private void setModbusMultiLocator () {
     	try {
-        	mbLocator = new ModbusMultiLocator (1, regType, offset, dataType, m_count);
+        	mbLocator = new ModbusMultiLocator (slaveAddress, regType, offset, dataType, m_count);
         }
         catch (Exception e) {
         	//TODO: Might want to add more better error handling here
@@ -748,6 +788,7 @@ public class ModbusDroid extends Activity {
     	hostIPaddress = settings.getString(IP_ADDRESS_PREFERENCE, "10.0.2.2");
         hostPort = Integer.parseInt(settings.getString(PORT_PREFERENCE, "502"));
         pollTime = Integer.parseInt(settings.getString(POLL_TIME_PREFERENCE, "500"));
+        slaveAddress = Integer.parseInt(settings.getString(SLAVE_ADDRESS_PREFERENCE, "1"));
         
         m_count = settings.getInt("registerCount", 1);
         offset = settings.getInt("registerOffset", 0);
@@ -865,7 +906,7 @@ public class ModbusDroid extends Activity {
     	if (mbLocator == null ) {
             setModbusMultiLocator();
     	}
-    	mbLocator.setSlaveAndRange(new SlaveAndRange(1, regType) );
+    	mbLocator.setSlaveAndRange(new SlaveAndRange(slaveAddress, regType) );
     	
     	SharedPreferences.Editor editor = settings.edit();
 		editor.putInt("registerType", regType);

@@ -56,7 +56,7 @@ import android.widget.TextView;
     	}
     	
     	/*
-    	 * This is blantantly stolen from the example API code
+    	 * This is blatantly stolen from the example API code
     	 * and modified for my purposes
     	 */
     	public class EfficientAdapter extends BaseAdapter {

@@ -22,6 +22,12 @@
             android:title="Poll Time"
             android:summary="Set Poll Time (ms)"
             android:defaultValue="1000" />
+       	<EditTextPreference  android:dialogTitle="Set Alternative Slave Address"
+        	android:dialogMessage="Slave Address"
+            android:key="SlaveAddress"
+            android:title="Slave Address"
+            android:summary="*Experimental* - Alternative Slave Address"
+            android:defaultValue="1" />
 	</PreferenceCategory>
 
 </PreferenceScreen>
