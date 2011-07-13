@@ -47,6 +47,8 @@ import android.widget.AdapterView.OnItemSelectedListener;
 public class ModbusDroid extends Activity {
     
 	/** Called when the activity is first created. */
+	
+	private final boolean DEBUG = false;
 
 	/* Menu constants
 	 * 
@@ -176,7 +178,7 @@ public class ModbusDroid extends Activity {
 	 * We are overriding this because we need to explicitly
 	 * disconnect if we are connected when the app stops
 	 * 
-	 * Consider using onPause/onResume to allow a hidden app
+	 * Consider using onPause/onResume and a service to allow a hidden app
 	 * to continue polling and then re-display results.
 	 */
 	@Override
@@ -249,10 +251,12 @@ public class ModbusDroid extends Activity {
         //mainLayout.addView(mbList, listParams);
         mainLayout.addView(notConnTextView, listParams);
         
-        /** 
+        /* 
          * 		We are going to create three dialogs, 
          * 		and then show the correct one depending on what
          * 		register range and data type we are using 
+         * 
+         * 		Perhaps consider factoring this out into its own method(s)
          */
         
         // Set up the numeric entry write dialog
@@ -262,7 +266,7 @@ public class ModbusDroid extends Activity {
        		AlertDialog.Builder(this);
    		writeNumericDialogBuilder.setTitle("Write to Register")
    			.setView(textEntryNumericView)
-   			.setIcon(R.drawable.ic_dialog_edit) //TODO: Better icon here
+   			.setIcon(R.drawable.ic_dialog_edit)
    			.setMessage("Value to Write to Register")
    			.setNegativeButton("Cancel", 
    					new DialogInterface.OnClickListener() {
@@ -767,6 +771,7 @@ public class ModbusDroid extends Activity {
      * Helper functions
      */
     //
+    
     /**
      * 
      */
@@ -915,7 +920,7 @@ public class ModbusDroid extends Activity {
     }
     
     
-    // Add some annimation to things - sliding in from the bottom
+    // Add some annimation to things - sliding in from the bottom - this needs work
     public static void setLayoutAnim_slideupfrombottom(ViewGroup panel, Context ctx) {
 
     	  AnimationSet set = new AnimationSet(true);

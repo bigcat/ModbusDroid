@@ -24,6 +24,8 @@ import android.util.Log;
 
 public class PollModbus implements Runnable {
 	
+	private static final boolean DEBUG = false;
+	
 	private int m_polltime;
 	private boolean m_connected = false;
 
@@ -111,14 +113,17 @@ public class PollModbus implements Runnable {
 	public synchronized void disconnect() {
 		Message m = this.mainThreadHandler.obtainMessage();
 		if (m_connected || mbTCPMaster.isInitialized() ) {
-			Log.i(getClass().getSimpleName(), "Try to destroy connection");	
+			if (DEBUG)
+				Log.i(getClass().getSimpleName(), "Try to destroy connection");	
 			mbTCPMaster.destroy();
-			Log.i(getClass().getSimpleName(), "Destroyed connection" );
+			if (DEBUG)
+				Log.i(getClass().getSimpleName(), "Destroyed connection" );
 			m.arg2 = 0;
 		}
 		else {
 			m.arg2 = 1;
-			Log.i(getClass().getSimpleName(), "Tried to destroy connection, but nothing was there!" );
+			if (DEBUG)
+				Log.i(getClass().getSimpleName(), "Tried to destroy connection, but nothing was there!" );
 		}
 		
 		m_connected = false;
@@ -217,8 +222,8 @@ public class PollModbus implements Runnable {
 				// after we call writeValue from the UI thread, 
 				// then we call notify() and this code gets processed 
 				if (doWriteValue) {
-					
-					Log.i(getClass().getSimpleName(), "Writing Value: " + writeValue );
+					if (DEBUG)
+						Log.i(getClass().getSimpleName(), "Writing Value: " + writeValue );
 					mbTCPMaster.setValue(mbWriteLocator, writeValue);
 					doWriteValue = false;
 				}

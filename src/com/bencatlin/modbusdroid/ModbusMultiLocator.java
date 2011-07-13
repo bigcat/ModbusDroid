@@ -11,6 +11,7 @@ import com.serotonin.modbus4j.exception.ModbusIdException;
 
 public class ModbusMultiLocator extends ModbusLocator {
 
+	private static final boolean DEBUG = false;
 	private int registersLength;  // This is to track how many registers to read
 	
 	public ModbusMultiLocator(SlaveAndRange slaveAndRange, int offset, int dataType, int length) {
@@ -60,7 +61,8 @@ public class ModbusMultiLocator extends ModbusLocator {
      * 
      */
     public synchronized void setSlaveAndRange (SlaveAndRange slaveAndRange ) {
-    	Log.i(getClass().getSimpleName(), "Setting Register Type to: " + slaveAndRange.getRange());
+    	if (DEBUG)
+    		Log.i(getClass().getSimpleName(), "Setting Register Type to: " + slaveAndRange.getRange());
     	this.slaveAndRange = slaveAndRange;
     	//this.setDataType(slaveAndRange.getRange());
     }
