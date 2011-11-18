@@ -7,13 +7,18 @@
             android:key="IpAddress"
             android:title="IP Address"
             android:summary="Set Destination IP Address"
-            android:defaultValue="10.0.2.2" />
+            android:defaultValue="10.0.2.2" 
+            android:singleLine="true"
+            android:numeric="integer|decimal"
+            />
         <EditTextPreference  android:dialogTitle="Set Destination Port"
         	android:dialogMessage="Port:"
             android:key="PortSetting"
             android:title="Port"
             android:summary="Set Destination Port"
-            android:defaultValue="502" />
+            android:defaultValue="502"
+            android:singleLine="true"
+            android:numeric="integer" />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Modbus Settings">
 		<EditTextPreference  android:dialogTitle="Set Poll Time in ms (0 = Poll Once)"
@@ -21,13 +26,19 @@
             android:key="PollTime"
             android:title="Poll Time"
             android:summary="Set Poll Time (ms)"
-            android:defaultValue="1000" />
+            android:defaultValue="1000"
+            android:singleLine="true" 
+            android:numeric="integer"
+            />
        	<EditTextPreference  android:dialogTitle="Set Alternative Slave Address"
         	android:dialogMessage="Slave Address"
             android:key="SlaveAddress"
             android:title="Slave Address"
             android:summary="*Experimental* - Alternative Slave Address"
-            android:defaultValue="1" />
+            android:defaultValue="1"
+            android:singleLine="true"
+            android:numeric="integer"
+             />
 	</PreferenceCategory>
 
 </PreferenceScreen>

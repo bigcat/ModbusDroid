@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="horizontal" >
+    
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/param_table"
+        android:layout_width = "wrap_content"
+        android:layout_height="wrap_content"
+        >
+        <TableRow>
+            <TextView
+                android:id="@+id/offset_Label"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Address" 
+                android:padding="3dip" 
+                android:gravity="center_horizontal"
+                />
+            <TextView
+                android:id="@+id/length_Label"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Length" 
+                android:padding="3dip" 
+                android:gravity="center_horizontal" />
+        </TableRow>
+        <TableRow>
+            <EditText
+                android:id="@+id/offset"
+                android:layout_width="80dip"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/editbox_background"
+                android:text="0"
+                android:numeric="integer"
+                android:inputType="number" 
+                android:imeOptions="actionDone"
+                android:selectAllOnFocus="true"
+                android:gravity="center_vertical|center_horizontal"
+                android:padding="3dip" />
+            <EditText 
+                android:id="@+id/length"
+                android:layout_width="60dip"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/editbox_background" 
+                android:text="1" 
+                android:numeric="integer"
+                android:imeOptions="actionDone"
+                android:inputType="number" 
+                android:selectAllOnFocus="true"
+                android:gravity="center_horizontal|center_vertical"
+                android:padding="3dip"/>
+            
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:id="@+id/point_Type_Label"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Point Type" 
+                android:padding="3dip" 
+                android:gravity="center_horizontal"
+                android:layout_span="2"
+                />
+        </TableRow>
+        <TableRow>
+            <Spinner
+                android:id="@+id/point_Type"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:drawSelectorOnTop="true"
+                android:prompt="@string/point_type_prompt" 
+                android:layout_gravity="center_vertical"
+                android:padding="3dip"
+                android:layout_span="2"
+                />
+        </TableRow>
+    </TableLayout>
+</LinearLayout>

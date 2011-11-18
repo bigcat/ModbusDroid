@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.bencatlin.modbusdroid" 
-      android:installLocation="auto" android:versionName="0.9.1" android:versionCode="2">
+      android:installLocation="auto" android:versionName="0.9.2" android:versionCode="3">
     <application android:label="@string/app_name" android:allowBackup="true" android:icon="@drawable/ic_launcher_modbusdroid" android:debuggable="false">
-        <activity android:name=".ModbusDroid"
+        <activity android:name=".OldVersion.ModbusDroid"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -11,7 +11,7 @@
             </intent-filter>
         </activity>
 
-    <activity android:name="connectionSettings" android:label="@string/Conn_Settings">
+    <activity android:name=".OldVersion.connectionSettings" android:label="@string/Conn_Settings">
     </activity>
 </application>
     <uses-sdk android:minSdkVersion="4"/>
