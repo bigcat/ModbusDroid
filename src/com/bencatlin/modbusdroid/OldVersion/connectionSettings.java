@@ -14,10 +14,12 @@ public class connectionSettings extends PreferenceActivity implements OnSharedPr
 	public static final String IP_ADDRESS_PREFERENCE = "IpAddress";
 	public static final String PORT_PREFERENCE = "PortSetting";
 	public static final String POLL_TIME_PREFERENCE = "PollTime";
+	public static final String SLAVE_ID = "SlaveAddress";
 	
     private EditTextPreference IPAddressPreference; 
     private EditTextPreference PortPreference;
     private EditTextPreference PollTimePreference;
+    private EditTextPreference SlaveIdPreference;
     
     
     @Override
@@ -35,6 +37,7 @@ public class connectionSettings extends PreferenceActivity implements OnSharedPr
         PollTimePreference = (EditTextPreference)getPreferenceScreen().findPreference(POLL_TIME_PREFERENCE);
         PollTimePreference.setSummary(getPreferenceScreen().getSharedPreferences().getString(POLL_TIME_PREFERENCE, "Set Poll Time in ms (0 = Poll Once)") + "ms");
         
+        SlaveIdPreference = (EditTextPreference)getPreferenceScreen().findPreference(SLAVE_ID);
         
         /*final EditText IP_address_entry = (EditText) findViewById(R.id.IP_address_entry);
         final Button Cancel = (Button) findViewById(R.id.Cancel);
@@ -82,6 +85,9 @@ public class connectionSettings extends PreferenceActivity implements OnSharedPr
         else if (key.equals(POLL_TIME_PREFERENCE))
         {
         	PollTimePreference.setSummary(sharedPreferences.getString(key, "Set Poll Time in ms (0 = Poll Once)") + "ms");
+        }
+        else if (key.equals(SLAVE_ID)) {
+        
         }
     }
     

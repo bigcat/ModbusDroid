@@ -5,11 +5,13 @@
     android:layout_height="fill_parent"
     android:orientation="horizontal" >
     
-    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <TableLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/param_table"
-        android:layout_width = "wrap_content"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         >
+
         <TableRow>
             <TextView
                 android:id="@+id/offset_Label"
@@ -51,7 +53,8 @@
                 android:inputType="number" 
                 android:selectAllOnFocus="true"
                 android:gravity="center_horizontal|center_vertical"
-                android:padding="3dip"/>
+                android:padding="3dip"
+                />
             
         </TableRow>
         <TableRow>

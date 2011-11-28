@@ -9,7 +9,7 @@
             android:summary="Set Destination IP Address"
             android:defaultValue="10.0.2.2" 
             android:singleLine="true"
-            android:numeric="integer|decimal"
+            android:inputType="number|numberDecimal|text|textNoSuggestions"
             />
         <EditTextPreference  android:dialogTitle="Set Destination Port"
         	android:dialogMessage="Port:"
@@ -18,7 +18,8 @@
             android:summary="Set Destination Port"
             android:defaultValue="502"
             android:singleLine="true"
-            android:numeric="integer" />
+            android:numeric="integer"
+            android:inputType="number"  />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Modbus Settings">
 		<EditTextPreference  android:dialogTitle="Set Poll Time in ms (0 = Poll Once)"
@@ -29,6 +30,7 @@
             android:defaultValue="1000"
             android:singleLine="true" 
             android:numeric="integer"
+            android:inputType="number" 
             />
        	<EditTextPreference  android:dialogTitle="Set Alternative Slave Address"
         	android:dialogMessage="Slave Address"
@@ -39,6 +41,16 @@
             android:singleLine="true"
             android:numeric="integer"
              />
+	</PreferenceCategory>
+	<PreferenceCategory android:title="Application Info">
+		<com.bencatlin.modbusdroid.OldVersion.CustomDialogPreference
+			android:dialogIcon = "@drawable/ic_launcher_modbusdroid"
+			android:title="About ModbusDroid"
+			android:dialogMessage = "I need a sweet string here"
+			android:negativeButtonText="Done"
+			android:positiveButtonText=""
+		/>
+	
 	</PreferenceCategory>
 
 </PreferenceScreen>

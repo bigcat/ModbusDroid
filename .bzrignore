@@ -1,2 +1,12 @@
-bin/*
-gen/*
+*.class
+*.apk
+Released APK/*
+bin
+gen
+Released APK
+bin/classes
+bin/classes.dex
+bin/ModbusDroid.apk
+bin/res
+bin/resources.ap_.~1~
+gen/com

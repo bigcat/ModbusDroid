@@ -344,7 +344,7 @@ public class ModbusDroid extends Activity {
        			
    					Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
        			
-   					mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
+   					mb.writeValue(new ModbusMultiLocator (slaveAddress, regType, writeRegOffset, dataType, 1)
    						, mbWriteValue);
        			
    				}
@@ -380,7 +380,7 @@ public class ModbusDroid extends Activity {
    					mbWriteValue = (short) tempWrite.shortValue();
    					Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
 
-   	            	mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
+   	            	mb.writeValue(new ModbusMultiLocator (slaveAddress, regType, writeRegOffset, dataType, 1)
    						, mbWriteValue);
    					dialog.dismiss();
    				}
@@ -407,7 +407,7 @@ public class ModbusDroid extends Activity {
             	mbWriteValue = (boolean) (item != 0);
 				Toast.makeText(getBaseContext(), "Writing Value: " + mbWriteValue, 5).show();
 
-            	mb.writeValue(new ModbusMultiLocator (1, regType, writeRegOffset, dataType, 1)
+            	mb.writeValue(new ModbusMultiLocator (slaveAddress, regType, writeRegOffset, dataType, 1)
 					, mbWriteValue);
             	dialog.dismiss();
             	return;
@@ -447,7 +447,7 @@ public class ModbusDroid extends Activity {
         dataTypeMenuBuilder.setSingleChoiceItems(R.array.dataTypeItems, dataType, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 //Set datatype here
-            	oldDataType = item +1;
+            	oldDataType = item + 1;
             	setDataType(item + 1);
 				
 				dataTypeAlert.dismiss();

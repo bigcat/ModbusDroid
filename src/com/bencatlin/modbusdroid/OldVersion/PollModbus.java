@@ -95,12 +95,12 @@ public class PollModbus implements Runnable {
 			
 		}
 		catch (ModbusInitException initException) {
-			Log.e(getClass().getSimpleName(), initException.getMessage() );
+			Log.e(getClass().getSimpleName(), exceptionStringHelper(initException) );
 			m_connected = false;
 			throw initException;
 		}
 		catch (Exception e) {
-			Log.e(getClass().getSimpleName(), e.getMessage() );
+			Log.e(getClass().getSimpleName(), exceptionStringHelper(e) );
 			m_connected = false;
 			throw e;
 			//TODO: do something here to catch other exceptions -- figure this out later
@@ -182,7 +182,7 @@ public class PollModbus implements Runnable {
 			}
 			catch (RuntimeException runtime_e)
 			{
-				Log.e(getClass().getSimpleName(), runtime_e.getMessage() );
+				Log.e(getClass().getSimpleName(), exceptionStringHelper(runtime_e) );
 				//Need a way to get a debug message here
 				
 				//Send a message to the main UI thread that we got a connection error
@@ -192,7 +192,7 @@ public class PollModbus implements Runnable {
 			}
 			catch (Exception connect_e)
 			{	
-				Log.e(getClass().getSimpleName(), connect_e.getMessage() );
+				Log.e(getClass().getSimpleName(), exceptionStringHelper(connect_e) );
 				//Need a way to get a debug message here too
 				
 				//Send a message to the main UI thread that we got a connection error
@@ -238,7 +238,7 @@ public class PollModbus implements Runnable {
 			}			
 		}
 		catch (ModbusTransportException m_exception) {
-			Log.e(getClass().getSimpleName(), m_exception.getMessage() );
+			Log.e(getClass().getSimpleName(), exceptionStringHelper(m_exception) );
 			this.disconnect();
 			m.arg1 = -1;
 			m.obj = m_exception.getMessage();
@@ -248,14 +248,14 @@ public class PollModbus implements Runnable {
 			
 		}*/
 		catch (NullPointerException nullException) {
-			Log.e(getClass().getSimpleName(), "Null Pointer Exception" );
+			//Log.e(getClass().getSimpleName(), "Null Pointer Exception" );
 			m.arg1 = -1;
 			m.obj = nullException.getMessage();
 			mainThreadHandler.sendMessage(m);
 			this.disconnect();
 		}
 		catch (Exception poll_e) {
-			Log.e(getClass().getSimpleName(), poll_e.getMessage() );
+			Log.e(getClass().getSimpleName(), exceptionStringHelper(poll_e) );
 			m.arg1 = -1;
 			m.obj = poll_e.getMessage();
 			mainThreadHandler.sendMessage(m);
@@ -266,5 +266,14 @@ public class PollModbus implements Runnable {
 		}
 	}
 	
-
+	/**
+	 * Helper method to eliminate any log NullPointerExceptions when an exception doesn't contain a message string
+	 * 
+	 * @param e Exception that was caught
+	 * @return empty string, or message from exception if it exists
+	 */
+	private String exceptionStringHelper(Exception e) {
+		return (e.getMessage() != null)? e.getMessage() : "";
+	}
+	
 }
