@@ -1,7 +1,6 @@
 package com.bencatlin.modbusdroid.OldVersion;
 
 import com.bencatlin.modbusdroid.R;
-import com.bencatlin.modbusdroid.R.xml;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
